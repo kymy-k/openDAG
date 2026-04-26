@@ -33,7 +33,7 @@ function describeNode(node: DagNode): string {
 export function run(input: Input): Output {
   const parsedInput = InputSchema.parse(input);
   const nodes = [...parsedInput.dag.nodes].sort((left, right) => left.id.localeCompare(right.id));
-  const title = parsedInput.title ?? "Functional DAG Node Catalog";
+  const title = parsedInput.title ?? "openDAG Node Catalog";
   const markdown = [
     `# ${escapeMarkdown(title)}`,
     "",

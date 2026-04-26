@@ -1,6 +1,6 @@
 ---
 name: functional-dag-agent-skill
-description: Contract-first functional DAG workflow for complex coding tasks. Use when Codex is starting a complex implementation, decomposing work into pure typed DAG nodes, implementing a single assigned node, verifying contracts/tests, enforcing zero-trust agent boundaries, or refusing to mutate unrelated modules. Reusable across repositories; only assume the functional-codex repo layout when the project has explicitly opted into it.
+description: Contract-first functional DAG workflow for complex coding tasks. Use when Codex is starting a complex implementation, decomposing work into pure typed DAG nodes, implementing a single assigned node, verifying contracts/tests, enforcing zero-trust agent boundaries, or refusing to mutate unrelated modules. Reusable across repositories; only assume the openDAG repo layout when the project has explicitly opted into it.
 ---
 
 # Functional DAG Agent Skill
@@ -63,7 +63,7 @@ Prefer the repo's own commands. If none exist, run the nearest equivalents:
 5. Lint, if already configured
 6. Full verification before finishing if the change touches shared behavior
 
-For repositories that opt into the functional-codex MVP, typical commands are:
+For repositories that opt into the openDAG MVP, typical commands are:
 
 ```bash
 npm run validate:dag

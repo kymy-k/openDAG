@@ -18,7 +18,7 @@ export type Output = z.infer<typeof OutputSchema>;
 export const metadata: NodeMetadata = {
   id: "validateDag",
   purpose:
-    "Validate a functional-codex DAG object without reading files or mutating process state.",
+    "Validate a openDAG object without reading files or mutating process state.",
   dependencies: [],
   invariants: [
     "The function is pure and deterministic.",

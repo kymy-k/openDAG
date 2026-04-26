@@ -4,7 +4,8 @@ node_modules/
 # Build and tool output
 dist/
 coverage/
-.functional-codex/
+.openDAG/
+*.tgz
 
 # Logs
 *.log
@@ -23,4 +24,3 @@ pnpm-debug.log*
 Thumbs.db
 .idea/
 .vscode/
-

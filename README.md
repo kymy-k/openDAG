@@ -1,6 +1,6 @@
-# functional-codex
+# openDAG
 
-`functional-codex` is an MVP TypeScript framework for forcing coding-agent work through a functional, DAG-based, contract-first workflow.
+`openDAG` is an MVP TypeScript framework for forcing coding-agent work through a functional, DAG-based, contract-first workflow.
 
 The workflow is:
 
@@ -16,8 +16,19 @@ The generated node catalog is [specs/node_catalog.md](specs/node_catalog.md). It
 
 ## Install
 
+Use Node.js 18 or newer. This repo includes `.nvmrc` for Node 23.7.0.
+
 ```bash
+nvm use
 npm install
+```
+
+After the package is published, you can also install the CLI package from npm:
+
+```bash
+npm install -D opendag
+npx opendag-validate-dag
+npx opendag-visualise
 ```
 
 ## Commands
@@ -90,7 +101,7 @@ Generate and open an interactive DAG page:
 npm run visualise
 ```
 
-The command writes `.functional-codex/dag-visualisation.html`. Use search, status filtering, and node selection to inspect kind, dependencies, dependents, invariants, schemas, and allowed files. Imperative, helper, template, and skill nodes have distinct visual styling.
+The command writes `.openDAG/dag-visualisation.html`. Use search, status filtering, and node selection to inspect kind, dependencies, dependents, invariants, schemas, and allowed files. Imperative, helper, template, and skill nodes have distinct visual styling.
 
 To skip opening the file automatically:
 

@@ -9,7 +9,7 @@ const ignored = new Set([
   "dist",
   "build",
   "coverage",
-  ".functional-codex",
+  ".openDAG",
   ".codex",
   ".next",
   ".nuxt",

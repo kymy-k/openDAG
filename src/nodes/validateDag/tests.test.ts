@@ -107,6 +107,31 @@ describe("validateDag", () => {
     expect(result.ok).toBe(true);
   });
 
+  it("allows imperative package workflow metadata files", () => {
+    const result = run({
+      dag: {
+        nodes: [
+          {
+            ...baseNode,
+            id: "command.build",
+            kind: "imperative" as const,
+            allowedFiles: [
+              "package.json",
+              "package-lock.json",
+              "tsconfig.build.json",
+              "src/index.ts",
+              "LICENSE",
+              ".nvmrc"
+            ],
+            invariants: ["May run package build subprocesses at the shell boundary."]
+          }
+        ]
+      }
+    });
+
+    expect(result.ok).toBe(true);
+  });
+
   it("rejects placeholder node documentation", () => {
     const result = run({
       dag: {

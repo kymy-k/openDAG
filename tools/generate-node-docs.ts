@@ -1,4 +1,5 @@
-import { readFileSync, writeFileSync } from "node:fs";
+#!/usr/bin/env node
+import { readFileSync, realpathSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { run as buildNodeCatalog } from "../src/nodes/buildNodeCatalog/implementation.js";
@@ -44,6 +45,6 @@ function main(): void {
   console.log(`Generated node catalog written to ${outputPath}`);
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   main();
 }

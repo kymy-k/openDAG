@@ -1,6 +1,6 @@
 # Setup Guide: Add Functional DAG Contracts To Any Project
 
-This guide shows how to adopt the `functional-codex` workflow in an existing repository without assuming this exact repo layout.
+This guide shows how to adopt the `openDAG` workflow in an existing repository without assuming this exact repo layout.
 
 ## Goal
 

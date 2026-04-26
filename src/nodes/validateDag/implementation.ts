@@ -10,7 +10,12 @@ const allowedGlobalPrefixes = [
   "README.md",
   "SETUP_GUIDE.md",
   "AGENTS.md",
+  "LICENSE",
+  ".nvmrc",
   "package.json",
+  "package-lock.json",
+  "src/index.ts",
+  "tsconfig.build.json",
   "tsconfig.json"
 ];
 

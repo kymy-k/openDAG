@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { execFileSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -30,7 +31,7 @@ const outputArgIndex = process.argv.indexOf("--output");
 const outputPath =
   outputArgIndex >= 0 && process.argv[outputArgIndex + 1]
     ? path.resolve(process.argv[outputArgIndex + 1])
-    : path.join(process.cwd(), ".functional-codex", "dag-visualisation.html");
+    : path.join(process.cwd(), ".openDAG", "dag-visualisation.html");
 
 const validation = validateDag();
 
@@ -44,7 +45,7 @@ if (!validation.ok || !validation.dag) {
 
 const model = buildDagVisualisationModel({ dag: validation.dag });
 const { html } = renderDagVisualisationHtml({
-  title: "functional-codex DAG",
+  title: "openDAG",
   model
 });
 
@@ -57,4 +58,3 @@ console.log("Use --no-open to skip opening the generated HTML file.");
 if (shouldOpen) {
   openFile(outputPath);
 }
-

@@ -95,7 +95,7 @@
     {
       "id": "validateDag",
       "kind": "pure",
-      "purpose": "Validate an in-memory functional-codex DAG object for schema shape, unique ids, dependency integrity, documentation quality, acyclicity, and allowed file boundaries.",
+      "purpose": "Validate an in-memory openDAG object for schema shape, unique ids, dependency integrity, documentation quality, acyclicity, and allowed file boundaries.",
       "inputSchema": "{ dag: unknown }",
       "outputSchema": "{ ok: boolean, errors: string[], dag?: Dag }",
       "dependencies": [
@@ -1090,7 +1090,7 @@
       "id": "skill.functionalDagAgentSkill",
       "kind": "skill",
       "purpose": "Package reusable Codex instructions, templates, and helper scripts for applying the functional DAG workflow while implementing coding tasks.",
-      "inputSchema": "Codex task context for a repo that may or may not already use functional-codex",
+      "inputSchema": "Codex task context for a repo that may or may not already use openDAG",
       "outputSchema": "workflow guidance, templates, and helper scripts for DAG-based implementation",
       "dependencies": [
         "skill.checkDagJson.visit",
@@ -1352,6 +1352,77 @@
         "specs/node_catalog.md",
         "specs/dag.json",
         "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "command.build",
+      "kind": "imperative",
+      "purpose": "Expose npm run build as the package build entrypoint that compiles TypeScript source and CLI tools into dist for npm publication.",
+      "inputSchema": "process argv from npm run build",
+      "outputSchema": "compiled dist artifacts and process exit code",
+      "dependencies": [],
+      "invariants": [
+        "Top-level package build entrypoint may invoke the TypeScript compiler through the npm shell only.",
+        "Build output is generated from committed source, contracts, and tool entrypoints."
+      ],
+      "allowedFiles": [
+        "package.json",
+        "package-lock.json",
+        "tsconfig.json",
+        "tsconfig.build.json",
+        "src/index.ts",
+        "contracts/contractTypes.ts",
+        "tools/create-node.ts",
+        "tools/generate-node-docs.ts",
+        "tools/validate-dag.ts",
+        "tools/verify-all.ts",
+        "tools/verify-node.ts",
+        "tools/visualise.ts",
+        "LICENSE",
+        ".nvmrc",
+        "specs/dag.json"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "command.package",
+      "kind": "imperative",
+      "purpose": "Represent npm pack and npm publish package assembly, including docs, skills, templates, specs, compiled dist files, and package metadata.",
+      "inputSchema": "npm pack or npm publish process context",
+      "outputSchema": "package tarball contents or npm registry publication result",
+      "dependencies": [
+        "command.build",
+        "command.verifyAll"
+      ],
+      "invariants": [
+        "Package assembly must run verification and build through npm lifecycle scripts before publication.",
+        "Published artifacts must come from declared package files and generated dist output."
+      ],
+      "allowedFiles": [
+        "package.json",
+        "package-lock.json",
+        "README.md",
+        "SETUP_GUIDE.md",
+        "AGENTS.md",
+        "LICENSE",
+        ".nvmrc",
+        "src/index.ts",
+        "contracts/contractTypes.ts",
+        "tools/create-node.ts",
+        "tools/generate-node-docs.ts",
+        "tools/validate-dag.ts",
+        "tools/verify-all.ts",
+        "tools/verify-node.ts",
+        "tools/visualise.ts",
+        "functional-dag-agent-skill/SKILL.md",
+        "functional-dag-repo-converter-skill/SKILL.md",
+        "templates/node.contract.template.ts",
+        "templates/node.implementation.template.ts",
+        "templates/node.test.template.ts",
+        "specs/dag.json",
+        "specs/node_catalog.md",
+        "specs/user_spec.md"
       ],
       "status": "verified"
     },

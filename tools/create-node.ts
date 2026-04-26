@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { run as planNodeScaffold } from "../src/nodes/planNodeScaffold/implementation.js";

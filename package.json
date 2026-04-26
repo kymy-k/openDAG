@@ -1,9 +1,59 @@
 {
-  "name": "functional-codex",
+  "name": "opendag",
   "version": "0.1.0",
-  "private": true,
+  "description": "Contract-first functional DAG workflow and CLI for coding-agent work.",
   "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/kymy-k/openDAG#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kymy-k/openDAG.git"
+  },
+  "bugs": {
+    "url": "https://github.com/kymy-k/openDAG/issues"
+  },
+  "keywords": [
+    "codex",
+    "dag",
+    "functional-programming",
+    "agents",
+    "contracts",
+    "zod",
+    "typescript"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js"
+    },
+    "./contracts": {
+      "types": "./dist/contracts/contractTypes.d.ts",
+      "import": "./dist/contracts/contractTypes.js"
+    }
+  },
+  "bin": {
+    "opendag-create-node": "dist/tools/create-node.js",
+    "opendag-generate-docs": "dist/tools/generate-node-docs.js",
+    "opendag-validate-dag": "dist/tools/validate-dag.js",
+    "opendag-verify-all": "dist/tools/verify-all.js",
+    "opendag-verify-node": "dist/tools/verify-node.js",
+    "opendag-visualise": "dist/tools/visualise.js"
+  },
+  "files": [
+    "AGENTS.md",
+    "README.md",
+    "SETUP_GUIDE.md",
+    "dist/",
+    "functional-dag-agent-skill/",
+    "functional-dag-repo-converter-skill/",
+    "specs/",
+    "templates/"
+  ],
   "scripts": {
+    "build": "tsc -p tsconfig.build.json",
     "validate:dag": "tsx tools/validate-dag.ts",
     "verify:node": "tsx tools/verify-node.ts",
     "verify:all": "tsx tools/verify-all.ts",
@@ -12,7 +62,9 @@
     "check:docs": "tsx tools/generate-node-docs.ts --check",
     "visualise": "tsx tools/visualise.ts",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepack": "npm run build",
+    "prepublishOnly": "npm run verify:all && npm run build"
   },
   "dependencies": {
     "zod": "^3.23.8"

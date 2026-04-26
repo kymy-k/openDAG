@@ -1,4 +1,5 @@
-import { readFileSync } from "node:fs";
+#!/usr/bin/env node
+import { readFileSync, realpathSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { run as validateDagNode } from "../src/nodes/validateDag/implementation.js";
@@ -26,6 +27,6 @@ function main(): void {
   console.log("DAG validation passed.");
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   main();
 }
