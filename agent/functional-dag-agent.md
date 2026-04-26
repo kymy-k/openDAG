@@ -8,7 +8,7 @@ Separate the imperative shell from the pure core. DAG nodes should be determinis
 
 ## Agent Roles
 
-Default to **master agent** unless the user explicitly assigns Codex to one node as a subagent.
+Default to **master agent** unless the user explicitly assigns the agent to one node as a subagent.
 
 The master agent:
 

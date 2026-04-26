@@ -1,6 +1,6 @@
 ---
 name: opendag
-description: Use openDAG's contract-first functional DAG workflow for coding-agent work, including master/subagent node implementation, zero-trust file boundaries, verification, and incremental repository conversion into pure typed DAG nodes. Use when Codex is starting a complex implementation, enforcing DAG contracts, assigning or implementing a node, verifying node/file scope, or converting an existing repo toward openDAG.
+description: Use openDAG's contract-first functional DAG workflow for coding-agent work, including master/subagent node implementation, zero-trust file boundaries, verification, and incremental repository conversion into pure typed DAG nodes. Use when an agent is starting a complex implementation, enforcing DAG contracts, assigning or implementing a node, verifying node/file scope, or converting an existing repo toward openDAG.
 ---
 
 # openDAG
@@ -43,6 +43,7 @@ Detailed reference: `repo-converter/functional-dag-repo-converter.md`.
 ## Bundled Tools
 
 - `agent/scripts/check-dag-json.mjs`: lightweight DAG checker for skill-local or early setup use.
+- `agent/scripts/visualise-dag.mjs`: standalone HTML DAG visualisation generator.
 - `agent/scripts/scaffold-ts-zod-node.mjs`: TypeScript/Zod node scaffold helper.
 - `repo-converter/scripts/repo-scan.mjs`: scanner for uncovered functions, side-effect hints, and missing node tests.
 

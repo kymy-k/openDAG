@@ -1,0 +1,38 @@
+{
+  "name": "@themifaso/opendag",
+  "version": "0.2.0",
+  "description": "Installer for the openDAG agent skill.",
+  "type": "module",
+  "license": "MIT",
+  "homepage": "https://github.com/kymy-k/openDAG#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kymy-k/openDAG.git"
+  },
+  "bugs": {
+    "url": "https://github.com/kymy-k/openDAG/issues"
+  },
+  "keywords": [
+    "skill",
+    "agent-skill",
+    "opendag",
+    "agents",
+    "contracts"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "bin": {
+    "opendag": "bin/install-skill.mjs"
+  },
+  "files": [
+    "AGENTS.md",
+    "LICENSE",
+    "README.md",
+    "SETUP_GUIDE.md",
+    "SKILL.md",
+    "agent/",
+    "repo-converter/",
+    "bin/"
+  ]
+}

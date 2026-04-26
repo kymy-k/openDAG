@@ -4,7 +4,7 @@ This repository uses a contract-first functional DAG workflow.
 
 ## Agent Roles
 
-Codex acts as the master agent unless explicitly assigned one DAG node as a subagent.
+The agent acts as the master agent unless explicitly assigned one DAG node as a subagent.
 
 - Master agent: owns DAG decomposition, contracts, public I/O, dependencies, architecture, subagent assignments, patch review, and full verification.
 - Node subagent: implements or tests exactly one assigned node and may modify only files listed in that node's `allowedFiles`.

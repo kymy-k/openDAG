@@ -1,26 +1,46 @@
 # openDAG
 
-`openDAG` is a Codex skill for contract-first functional DAG coding work.
+`openDAG` is an agent skill for contract-first functional DAG coding work.
 
-Use it when you want Codex to structure implementation around explicit node contracts, pure deterministic functions, zero-trust subagent boundaries, and verification before finishing.
+Use it when you want an agent to structure implementation around explicit node contracts, pure deterministic functions, zero-trust subagent boundaries, and verification before finishing.
 
 ## Install
 
-Install this repository directly as a Codex skill:
+Install from npm:
 
 ```bash
-mkdir -p ~/.codex/skills
-git clone https://github.com/kymy-k/openDAG.git ~/.codex/skills/opendag
+npx @themifaso/opendag
+```
+
+By default, this copies the skill to `~/.skills/opendag`. You can override the skills directory:
+
+```bash
+npx @themifaso/opendag --target ~/.agent/skills
+```
+
+For Codex specifically:
+
+```bash
+npx @themifaso/opendag --codex
+```
+
+You can also install this repository directly as an agent skill:
+
+```bash
+mkdir -p ~/.skills
+git clone https://github.com/kymy-k/openDAG.git ~/.skills/opendag
 ```
 
 For local development, symlink the repo instead:
 
 ```bash
-mkdir -p ~/.codex/skills
-ln -s /path/to/openDAG ~/.codex/skills/opendag
+mkdir -p ~/.skills
+ln -s /path/to/openDAG ~/.skills/opendag
 ```
 
-Start a new Codex session after installing so the skill is discovered.
+Start a new agent session after installing so the skill is discovered.
+
+The npm package only provides the installer. It does not include any other CLI commands.
 
 ## Layout
 
@@ -64,6 +84,14 @@ Run the lightweight DAG checker:
 ```bash
 node agent/scripts/check-dag-json.mjs /path/to/repo/specs/dag.json
 ```
+
+Generate a standalone DAG visualisation graph:
+
+```bash
+node agent/scripts/visualise-dag.mjs /path/to/repo/specs/dag.json --output /path/to/repo/.openDAG/dag-visualisation.html
+```
+
+Add `--open` to open the generated HTML file after writing it.
 
 Scaffold a TypeScript/Zod node:
 

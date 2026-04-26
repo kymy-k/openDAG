@@ -4,7 +4,15 @@ This guide shows how to use the `opendag` skill in another repository.
 
 ## Use The Skill
 
-After installing this repository into `~/.codex/skills/opendag`, start a new Codex session and ask for the workflow directly:
+Install the skill:
+
+```bash
+npx @themifaso/opendag
+```
+
+That installs to `~/.skills/opendag` by default. Use `--target <skills-dir>` for another agent runtime, or `--codex` for Codex.
+
+Then start a new agent session and ask for the workflow directly:
 
 ```text
 Use opendag to implement this feature with contract-first DAG nodes.
@@ -54,3 +62,13 @@ Use `--scope <path>` for an incremental slice:
 ```bash
 node repo-converter/scripts/repo-scan.mjs --fail-on-uncovered --fail-on-missing-tests /path/to/repo --scope src/payments
 ```
+
+## Visualisation
+
+Generate a standalone DAG visualisation graph:
+
+```bash
+node agent/scripts/visualise-dag.mjs /path/to/repo/specs/dag.json --output /path/to/repo/.openDAG/dag-visualisation.html
+```
+
+Add `--open` to open the generated HTML file after writing it.
