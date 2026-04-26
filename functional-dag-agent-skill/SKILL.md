@@ -1,6 +1,6 @@
 ---
 name: functional-dag-agent-skill
-description: Contract-first functional DAG workflow for complex coding tasks. Use when Codex is starting a complex implementation, decomposing work into pure typed DAG nodes, implementing a single assigned node, verifying contracts/tests, enforcing zero-trust agent boundaries, or refusing to mutate unrelated modules. Reusable across repositories; only assume the openDAG repo layout when the project has explicitly opted into it.
+description: Master/subagent contract-first functional DAG workflow for complex coding tasks. Use when Codex is starting a complex implementation, decomposing work into pure typed DAG nodes, acting as a master agent, assigning one node to a subagent, implementing a single assigned node, verifying contracts/tests, enforcing allowedFiles boundaries, or refusing to mutate unrelated modules. Reusable across repositories; only assume the openDAG repo layout when the project has explicitly opted into it.
 ---
 
 # Functional DAG Agent Skill
@@ -10,6 +10,27 @@ Use this skill to turn coding work into small, typed, contract-first functional 
 ## Core Rule
 
 Separate the imperative shell from the pure core. DAG nodes should be deterministic functions with explicit input/output contracts, invariants, dependencies, and tests. Side effects belong outside nodes unless the project explicitly defines a side-effect boundary node.
+
+## Agent Roles
+
+Default to **master agent** unless the user explicitly assigns Codex to one node as a subagent.
+
+The master agent:
+
+- Owns the global spec, DAG, contracts, public I/O, dependencies, and architecture.
+- Decomposes features into node assignments before implementation.
+- May edit `specs/dag.json`, contracts, shell entrypoints, and shared architecture when the requested feature requires it.
+- Creates one assignment packet per node and, when the runtime and user authorization allow delegation, spawns one subagent per node.
+- Reviews every subagent patch against that node's `allowedFiles`, rejects out-of-scope edits, runs node verification, then runs full verification.
+
+A node subagent:
+
+- Implements or tests exactly one assigned node.
+- May modify only files listed in that node's `allowedFiles`.
+- Must not edit DAG entries, shared contracts, package scripts, verification tools, public interfaces, architecture, or another node unless the master assignment explicitly includes those files.
+- Must not broaden its own scope. If blocked, it writes a proposed DAG/contract change for the master instead of applying it.
+
+If subagents are unavailable, the master still uses the same assignment packets and enforces the same boundaries while implementing locally.
 
 ## Repository Detection
 
@@ -23,9 +44,10 @@ Before editing:
 
 ## Starting A Complex Coding Task
 
-1. Restate the task as a global spec: inputs, outputs, success criteria, constraints, and non-goals.
-2. Decompose the task into a DAG of small nodes.
-3. For each node define:
+1. Act as master agent.
+2. Restate the task as a global spec: inputs, outputs, success criteria, constraints, and non-goals.
+3. Decompose the task into a DAG of small nodes.
+4. For each node define:
    - id
    - kind: pure, imperative, helper, orphan, template, or skill
    - purpose
@@ -35,20 +57,42 @@ Before editing:
    - dependencies
    - allowed edit scope
    - verification command
-4. Check that dependencies are acyclic and that each node is independently testable.
-5. Implement only after contracts and tests exist, unless the user explicitly requests exploratory prototyping.
+5. Check that dependencies are acyclic and that each node is independently testable.
+6. Write or update contracts and tests before implementation when feasible.
+7. Create node assignment packets. Use one packet per subagent or per local implementation pass.
+8. Implement only after contracts and tests exist, unless the user explicitly requests exploratory prototyping.
 
 Use `templates/dag-node.md` as a compact checklist when a repo has no existing DAG format.
+Use `templates/master-feature-plan.md` for master planning and `templates/subagent-assignment.md` for node handoffs.
+
+## Master Workflow
+
+For every feature:
+
+1. Read local agent instructions and the DAG.
+2. Decide which files are master-owned: DAG, public I/O, shared contracts, shell commands, docs, verification.
+3. Decide node boundaries and update DAG/contracts/tests.
+4. For each implementation node, prepare an assignment with exact `allowedFiles`.
+5. Delegate only when useful and allowed by the execution environment. Assign one node per subagent.
+6. Review subagent output before integration:
+   - changed files must be a subset of the assigned node's `allowedFiles`
+   - tests must not be weakened
+   - public I/O must match the master-approved contract
+   - no hidden effects inside pure nodes
+7. Run node verification for accepted node work.
+8. Regenerate DAG docs and run full verification.
 
 ## Implementing One Assigned Node
 
-1. Read the global spec and DAG/contract entry for the assigned node.
-2. Confirm the node's allowed files and public interface.
-3. Write or update tests against the contract before implementation when feasible.
-4. Implement the pure function only inside the assigned scope.
-5. Validate input and output at the boundary when the local stack supports schemas, such as Zod in TypeScript.
-6. Do not edit upstream/downstream node interfaces to make the implementation easier.
-7. Run the node-level verification command and any relevant typecheck/lint command.
+1. Confirm you are acting as a node subagent, not master.
+2. Read the global spec and DAG/contract entry for the assigned node.
+3. Confirm the node's allowed files and public interface.
+4. Write or update tests against the contract before implementation when feasible.
+5. Implement the pure function only inside the assigned scope.
+6. Validate input and output at the boundary when the local stack supports schemas, such as Zod in TypeScript.
+7. Do not edit upstream/downstream node interfaces to make the implementation easier.
+8. Do not edit `specs/dag.json`, shared contracts, package scripts, verification tools, other nodes, or global architecture.
+9. Run the node-level verification command and any relevant typecheck/lint command.
 
 If the contract is impossible or underspecified, stop implementation for that part and write a proposed contract change with rationale.
 
@@ -75,6 +119,8 @@ npm run verify:all
 
 Treat individual agents as untrusted implementers:
 
+- Master agents may change DAG/contracts/architecture; subagents may not.
+- Subagents are constrained to one node and its exact `allowedFiles`.
 - Do not silently mutate unrelated modules.
 - Do not change public interfaces unless explicitly requested.
 - Do not weaken tests to pass.
@@ -83,6 +129,22 @@ Treat individual agents as untrusted implementers:
 - Do not make architectural changes while implementing a leaf node.
 
 When a requested change would require touching unrelated files, explain the dependency and ask or record a proposed change rather than silently editing.
+
+## Subagent Assignment Format
+
+Every node assignment must include this information:
+
+```text
+Role: node subagent
+Assigned node: <node id>
+Goal: implement or test only this node
+Contract: <input schema, output schema, invariants, dependencies>
+Allowed files: <exact allowedFiles list>
+Forbidden edits: DAG, shared contracts, package scripts, verification tools, public I/O, architecture, other nodes unless explicitly listed in allowed files and approved by master
+If blocked: write a proposed DAG/contract change; do not apply it
+Verification: <node-level command>
+Return: changed files, behavior summary, verification results, proposed changes if any
+```
 
 ## Refusal Pattern For Unrelated Mutations
 
@@ -98,5 +160,7 @@ When finishing, report:
 
 - Node(s) or contract(s) changed
 - Public interfaces changed, if any
+- Whether work was master-owned or subagent-owned
+- Any subagent patch boundary checks performed
 - Verification commands run and results
 - Any proposed DAG/contract changes left for review

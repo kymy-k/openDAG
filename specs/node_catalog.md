@@ -396,13 +396,13 @@ This catalog is generated from `specs/dag.json`. Update the DAG first, then rege
 
 - **Kind:** `skill`
 - **Status:** `verified`
-- **What it does:** Package reusable Codex instructions, templates, and helper scripts for applying the functional DAG workflow while implementing coding tasks.
+- **What it does:** Package reusable Codex master/subagent instructions, templates, and helper scripts for applying the functional DAG workflow while implementing coding tasks.
 - **Input it expects:** `Codex task context for a repo that may or may not already use openDAG`
-- **Output it gives:** `workflow guidance, templates, and helper scripts for DAG-based implementation`
+- **Output it gives:** `master workflow guidance, node subagent assignment rules, templates, and helper scripts for DAG-based implementation`
 - **Dependencies:** `skill.checkDagJson.visit`, `template.skillTypescriptZodNode.run`
 - **Invariants:**
   - Skill artifact is tracked in the DAG as a reusable workflow component.
-- **Allowed files:** `contracts/contractTypes.ts`, `functional-dag-agent-skill/SKILL.md`, `functional-dag-agent-skill/scripts/check-dag-json.mjs`, `functional-dag-agent-skill/scripts/scaffold-ts-zod-node.mjs`, `functional-dag-agent-skill/templates/dag-node.md`, `functional-dag-agent-skill/templates/typescript-zod-node.contract.template.ts`, `functional-dag-agent-skill/templates/typescript-zod-node.implementation.template.ts`, `functional-dag-agent-skill/templates/typescript-zod-node.test.template.ts`, `specs/dag.json`
+- **Allowed files:** `contracts/contractTypes.ts`, `functional-dag-agent-skill/SKILL.md`, `functional-dag-agent-skill/scripts/check-dag-json.mjs`, `functional-dag-agent-skill/scripts/scaffold-ts-zod-node.mjs`, `functional-dag-agent-skill/templates/dag-node.md`, `functional-dag-agent-skill/templates/master-feature-plan.md`, `functional-dag-agent-skill/templates/subagent-assignment.md`, `functional-dag-agent-skill/templates/typescript-zod-node.contract.template.ts`, `functional-dag-agent-skill/templates/typescript-zod-node.implementation.template.ts`, `functional-dag-agent-skill/templates/typescript-zod-node.test.template.ts`, `specs/dag.json`
 
 ## skill.functionalDagRepoConverterSkill
 

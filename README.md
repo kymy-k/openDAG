@@ -10,6 +10,8 @@ user_spec.md -> dag.json -> contracts -> tests -> implementation -> generated do
 
 Each DAG node is a typed function or tracked workflow artifact with explicit input/output schemas, invariants, dependencies, tests or verification, kind classification, and allowed file boundaries. The imperative CLI wraps the pure functional core and is responsible for filesystem/process side effects.
 
+The agent model is master/subagent by default. The master agent owns DAG decomposition, contracts, public I/O, architecture, node assignment, patch review, and full verification. Node subagents are zero-trust implementers: each subagent gets exactly one node and may only modify that node's `allowedFiles`.
+
 The DAG is intentionally function-level. Every named function in repository-owned source, tools, templates, and skill scripts should appear in `specs/dag.json`, even if it is a helper, orphan, template, skill helper, or imperative shell function.
 
 The generated node catalog is [specs/node_catalog.md](specs/node_catalog.md). It is generated from `specs/dag.json` and records what every node does, what input it expects, and what output it gives. Do not edit it by hand.
@@ -26,7 +28,7 @@ npm install
 After the package is published, you can also install the CLI package from npm:
 
 ```bash
-npm install -D opendag
+npm install -D @themifaso/opendag
 npx opendag-validate-dag
 npx opendag-visualise
 ```
@@ -92,6 +94,19 @@ npm run generate:docs
 - Skill artifacts such as `skill.functionalDagAgentSkill` and `skill.functionalDagRepoConverterSkill`.
 
 The CLI scripts in `tools/` should stay thin. Put deterministic decisions in DAG nodes and keep filesystem, process execution, and other side effects at the shell boundary.
+
+## Agent Workflow
+
+For a new feature, the master agent:
+
+1. Reads `specs/dag.json`.
+2. Updates the DAG, contracts, I/O, dependencies, and tests.
+3. Creates one node assignment per implementation unit.
+4. Gives each subagent only the assigned node contract, dependencies, exact `allowedFiles`, and verification command.
+5. Rejects any subagent patch that edits outside the assignment.
+6. Regenerates docs and runs full verification.
+
+If no subagent runtime is available, the master still uses the same assignment boundaries while implementing locally.
 
 ## Visualisation
 

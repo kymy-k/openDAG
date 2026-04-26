@@ -1,6 +1,6 @@
 {
-  "name": "opendag",
-  "version": "0.1.0",
+  "name": "@themifaso/opendag",
+  "version": "0.1.1",
   "description": "Contract-first functional DAG workflow and CLI for coding-agent work.",
   "type": "module",
   "engines": {
