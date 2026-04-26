@@ -11,5 +11,15 @@
       "allowedFiles": ["path/to/node/files"],
       "status": "planned"
     }
-  ]
+  ],
+  "conversionCriteria": {
+    "goal": "Every repo-owned named function is represented in the DAG with explicit contracts, invariants, dependencies, allowed files, and verification.",
+    "completeWhen": [
+      "repo-scan --fail-on-uncovered exits successfully or every remaining exclusion is documented",
+      "all effectful functions are marked imperative",
+      "generated node docs are current",
+      "DAG validation passes",
+      "available tests/static checks pass"
+    ]
+  }
 }

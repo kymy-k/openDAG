@@ -30,6 +30,24 @@
 | --- | --- | --- | --- | --- |
 | TODO | TODO | TODO | TODO | planned |
 
+## Goal-Driven Completion Criteria
+
+- [ ] Scanner has been run.
+- [ ] `repo-scan --fail-on-uncovered` exits successfully, except documented generated/vendor exclusions.
+- [ ] Every repo-owned named function is represented in `specs/dag.json`.
+- [ ] Every effectful function is marked `imperative`.
+- [ ] Every pure node has clear input/output contracts and invariants.
+- [ ] Generated node docs are current.
+- [ ] DAG validation passes.
+- [ ] Available tests/static checks pass.
+
+## Scanner Status
+
+- Total named functions:
+- Uncovered function count:
+- Uncovered function preview:
+- Documented exclusions:
+
 ## Risks
 
 - TODO
@@ -39,4 +57,3 @@
 ```bash
 TODO
 ```
-

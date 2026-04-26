@@ -131,6 +131,14 @@ This repo includes two reusable Codex skills:
 - [functional-dag-agent-skill](functional-dag-agent-skill/SKILL.md): use this workflow while implementing DAG-based tasks.
 - [functional-dag-repo-converter-skill](functional-dag-repo-converter-skill/SKILL.md): convert an existing repo toward the pure functional contract-based paradigm.
 
+The converter skill includes a scanner goal check:
+
+```bash
+node functional-dag-repo-converter-skill/scripts/repo-scan.mjs --fail-on-uncovered /path/to/repo
+```
+
+For a full conversion, that command should pass before the agent declares the conversion complete, unless every remaining generated/vendor exclusion is documented.
+
 To install either skill for Codex discovery:
 
 ```bash

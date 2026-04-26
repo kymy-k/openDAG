@@ -408,13 +408,79 @@ This catalog is generated from `specs/dag.json`. Update the DAG first, then rege
 
 - **Kind:** `skill`
 - **Status:** `verified`
-- **What it does:** Package reusable Codex instructions, templates, and helper scripts for converting an existing repository toward contract-first functional DAG architecture.
-- **Input it expects:** `existing repository source tree and conversion goal`
-- **Output it gives:** `conversion workflow, starter DAG template, AGENTS template, and repo scan helper`
-- **Dependencies:** `skill.repoScan.walk`
+- **What it does:** Package reusable Codex instructions, templates, and scanner helpers for aggressively converting an existing repository toward contract-first functional DAG architecture until all repo-owned functions are represented or explicitly blocked.
+- **Input it expects:** `existing repository source tree, conversion goal, and optional user-scoped conversion boundaries`
+- **Output it gives:** `goal-driven conversion workflow, DAG template, AGENTS template, conversion plan template, repo scan helper, and uncovered-function work queue semantics`
+- **Dependencies:** `skill.repoScan.extractNamedFunctions`, `skill.repoScan.functionAppearsCovered`, `skill.repoScan.isSourceFile`, `skill.repoScan.readDagCoverage`, `skill.repoScan.safeRead`, `skill.repoScan.walk`
 - **Invariants:**
   - Skill artifact is tracked in the DAG as a reusable conversion component.
+  - Full conversion mode does not stop while scanner-reported repo-owned functions remain uncovered unless each remaining item has a concrete blocker or exclusion.
 - **Allowed files:** `contracts/contractTypes.ts`, `functional-dag-repo-converter-skill/SKILL.md`, `functional-dag-repo-converter-skill/scripts/repo-scan.mjs`, `functional-dag-repo-converter-skill/templates/AGENTS.md.template`, `functional-dag-repo-converter-skill/templates/conversion-plan.md.template`, `functional-dag-repo-converter-skill/templates/dag.json.template`, `specs/dag.json`
+
+## skill.repoScan.extractNamedFunctions
+
+- **Kind:** `skill`
+- **Status:** `verified`
+- **What it does:** Extract repo-owned named function candidates from supported source files so full repository conversion has an explicit work queue.
+- **Input it expects:** `relativeFile: string and contents: string`
+- **Output it gives:** `array of { file: string, name: string, kind: string } function candidates`
+- **Dependencies:** `skill.repoScan.isSourceFile`
+- **Invariants:**
+  - Deterministic parser heuristic with no filesystem access.
+  - Duplicate names of the same kind in the same file are reported once.
+- **Allowed files:** `contracts/contractTypes.ts`, `functional-dag-repo-converter-skill/SKILL.md`, `functional-dag-repo-converter-skill/scripts/repo-scan.mjs`, `specs/dag.json`
+
+## skill.repoScan.functionAppearsCovered
+
+- **Kind:** `skill`
+- **Status:** `verified`
+- **What it does:** Decide whether a named function candidate appears represented by the existing DAG using node ids and allowed file coverage.
+- **Input it expects:** `fn: { file: string, name: string, kind: string } and coverage: { nodeIds: string[], allowedFiles: string[] }`
+- **Output it gives:** `boolean indicating whether the function appears covered by an existing DAG node`
+- **Dependencies:** `skill.repoScan.readDagCoverage`
+- **Invariants:**
+  - Deterministic helper with no filesystem access.
+  - A function is covered only when its file is allowed by some DAG node and a node id names or contains the function name.
+- **Allowed files:** `contracts/contractTypes.ts`, `functional-dag-repo-converter-skill/SKILL.md`, `functional-dag-repo-converter-skill/scripts/repo-scan.mjs`, `specs/dag.json`
+
+## skill.repoScan.isSourceFile
+
+- **Kind:** `skill`
+- **Status:** `verified`
+- **What it does:** Classify whether a scanned repository path is a source file that should be considered for DAG conversion coverage.
+- **Input it expects:** `file: string absolute or repository-relative path`
+- **Output it gives:** `boolean indicating whether the file extension is a supported source extension`
+- **Dependencies:** None
+- **Invariants:**
+  - Deterministic helper with no filesystem access.
+  - Only extension-based classification is performed.
+- **Allowed files:** `contracts/contractTypes.ts`, `functional-dag-repo-converter-skill/SKILL.md`, `functional-dag-repo-converter-skill/scripts/repo-scan.mjs`, `specs/dag.json`
+
+## skill.repoScan.readDagCoverage
+
+- **Kind:** `skill`
+- **Status:** `verified`
+- **What it does:** Read existing openDAG coverage from specs/dag.json so the converter can identify functions that are not yet represented in the DAG.
+- **Input it expects:** `repository root path captured by the scanner process`
+- **Output it gives:** `{ nodeIds: string[], allowedFiles: string[] } coverage summary`
+- **Dependencies:** `skill.repoScan.safeRead`
+- **Invariants:**
+  - Skill helper is intentionally imperative because it reads specs/dag.json.
+  - Invalid or missing DAG files produce empty coverage instead of stopping the scan.
+- **Allowed files:** `contracts/contractTypes.ts`, `functional-dag-repo-converter-skill/SKILL.md`, `functional-dag-repo-converter-skill/scripts/repo-scan.mjs`, `specs/dag.json`
+
+## skill.repoScan.safeRead
+
+- **Kind:** `skill`
+- **Status:** `verified`
+- **What it does:** Read a text file for repository scanning while converting read failures into an empty string so conversion scans can continue.
+- **Input it expects:** `file: string absolute path`
+- **Output it gives:** `file contents as UTF-8 text, or an empty string when the file cannot be read`
+- **Dependencies:** None
+- **Invariants:**
+  - Skill helper is intentionally imperative because it reads the filesystem.
+  - Read failures are local to the scanned file and do not abort the scan.
+- **Allowed files:** `contracts/contractTypes.ts`, `functional-dag-repo-converter-skill/SKILL.md`, `functional-dag-repo-converter-skill/scripts/repo-scan.mjs`, `specs/dag.json`
 
 ## skill.repoScan.walk
 

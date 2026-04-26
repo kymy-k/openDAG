@@ -7,6 +7,35 @@ description: Convert existing repositories incrementally into a pure functional,
 
 Use this skill to convert an existing repo toward a pure functional, contract-first DAG paradigm without a risky rewrite.
 
+## Goal-Driven Completion Contract
+
+The goal is: convert the repository so every repo-owned named function is represented in the DAG, each deterministic unit has an explicit contract, side effects are isolated as shell/imperative nodes, generated docs are current, and verification passes.
+
+Completion criteria are strict:
+
+- `scripts/repo-scan.mjs --fail-on-uncovered <repo-root>` exits successfully, except generated/vendor files explicitly documented as excluded.
+- `specs/dag.json` exists and includes every named repo-owned function as `pure`, `imperative`, `helper`, `orphan`, `template`, or `skill`.
+- Every node has clear `purpose`, `inputSchema`, `outputSchema`, dependencies, invariants, status, and `allowedFiles`.
+- Pure nodes do not perform filesystem, network, database, process env, time, randomness, hidden global state, or framework request/response effects.
+- Shell/effectful functions are present in the DAG and marked `imperative`.
+- Generated node docs are current.
+- The repo's DAG validation and available tests/static checks pass.
+
+Do **not** stop after a starter DAG, sample slice, or partial conversion when the user asks to convert the repo. Continue scanning, adding DAG nodes, updating docs, and verifying until the criteria above are met or a hard blocker is documented.
+
+Use a goal-driven loop:
+
+```text
+while completion criteria are not met:
+  scan the repo
+  list uncovered functions and unclear contracts
+  update DAG/contracts/docs for the next batch
+  run validation
+  if validation fails, fix the DAG or document a blocker
+```
+
+The master agent is the final evaluator. A subagent may claim its assigned node is done, but the master must check the criteria before accepting completion.
+
 ## First Pass
 
 1. Read local instructions: `AGENTS.md`, `README`, `CONTRIBUTING`, package files, test config, and existing architecture docs.
@@ -19,16 +48,18 @@ If the repo already has `specs/dag.json` or equivalent DAG files, follow the loc
 
 ## Conversion Strategy
 
-Convert incrementally:
+If the user asks for full conversion, convert exhaustively. If they explicitly ask for an incremental slice, convert only that slice and report remaining uncovered functions.
 
 1. Add minimal workflow files if absent: `AGENTS.md`, `specs/user_spec.md`, `specs/dag.json`, and a contracts module appropriate for the stack.
-2. Select one narrow workflow with low blast radius.
-3. Define DAG node contracts before implementation changes.
-4. Add tests for the contract and invariants.
-5. Move deterministic logic into pure node functions.
-6. Leave side effects in existing shell code and pass plain data into nodes.
-7. Add or update verification commands.
-8. Run verification and report what remains imperative.
+2. Run the repo scanner and inspect its `functionCandidates`, `possiblyUncoveredFunctions`, and `sideEffectHits`.
+3. Add DAG entries for every repo-owned named function. Use existing files in `allowedFiles`; do not move code unless needed.
+4. Classify deterministic logic as pure/helper/orphan and effect boundaries as imperative.
+5. Define or describe input/output contracts before implementation changes.
+6. Add or preserve tests for contracts and invariants when changing behavior.
+7. Move deterministic logic into pure node functions only when needed for the requested conversion; otherwise first represent the existing function faithfully in the DAG.
+8. Leave side effects in existing shell code and pass plain data into nodes.
+9. Add or update verification commands.
+10. Regenerate docs, rerun the scanner, and repeat until no uncovered repo-owned functions remain.
 
 Do not mass-refactor unrelated modules. Do not silently mutate unrelated public interfaces.
 
@@ -90,7 +121,11 @@ This change crosses the assigned DAG boundary because it touches <files/interfac
 
 ## Useful Scripts
 
-Run `scripts/repo-scan.mjs <repo-root>` for a quick filesystem-oriented scan. Treat its output as a starting point, not authority.
+Run `scripts/repo-scan.mjs <repo-root>` for a filesystem-oriented scan. Its `possiblyUncoveredFunctions` list is a work queue: do not declare full conversion complete while `possiblyUncoveredFunctionCount` is nonzero for repo-owned functions.
+
+Run `scripts/repo-scan.mjs --fail-on-uncovered <repo-root>` as the goal check. A nonzero exit means conversion is not done.
+
+The scanner is conservative. If it reports generated/vendor/test-helper functions that should not become DAG nodes, document the exclusion explicitly in the conversion plan or DAG notes rather than ignoring them silently.
 
 ## Finish With
 
@@ -101,4 +136,5 @@ Report:
 - Shells separated from pure logic.
 - Public interfaces changed, if any.
 - Verification commands run and results.
-- Remaining candidate nodes.
+- Scanner result: total named functions, uncovered functions, and documented exclusions.
+- Remaining candidate nodes. For full conversion, this must be empty or blocked with a concrete reason.
