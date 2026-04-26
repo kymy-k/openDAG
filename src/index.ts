@@ -6,3 +6,4 @@ export { run as planNodeScaffold } from "./nodes/planNodeScaffold/implementation
 export { run as planNodeVerification } from "./nodes/planNodeVerification/implementation.js";
 export { run as renderDagVisualisationHtml } from "./nodes/renderDagVisualisationHtml/implementation.js";
 export { run as validateDag } from "./nodes/validateDag/implementation.js";
+export { run as validateFileEditScope } from "./nodes/validateFileEditScope/implementation.js";

@@ -6,7 +6,7 @@ import { promisify } from "node:util";
 import { describe, expect, it } from "vitest";
 
 const execFileAsync = promisify(execFile);
-const scannerPath = path.join(process.cwd(), "functional-dag-repo-converter-skill", "scripts", "repo-scan.mjs");
+const scannerPath = path.join(process.cwd(), "opendag", "repo-converter", "scripts", "repo-scan.mjs");
 
 async function makeRepo(dagAllowedFiles: string[]): Promise<string> {
   const root = await mkdtemp(path.join(tmpdir(), "opendag-scan-"));

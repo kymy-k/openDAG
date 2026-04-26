@@ -1,11 +1,6 @@
----
-name: functional-dag-repo-converter-skill
-description: Convert existing repositories incrementally into a pure functional, contract-first DAG workflow. Use when Codex is asked to retrofit an app, library, CLI, service, or mixed codebase into explicit typed nodes with schemas/contracts, invariants, tests, allowed edit scopes, DAG metadata, verification commands, and zero-trust agent boundaries. Works across languages and should preserve existing architecture while moving deterministic logic into pure nodes and side effects into shells.
----
+# openDAG Repo Converter Workflow
 
-# Functional DAG Repo Converter
-
-Use this skill to convert an existing repo toward a pure functional, contract-first DAG paradigm without a risky rewrite.
+Use this workflow through the root `opendag` skill to convert an existing repo toward a pure functional, contract-first DAG paradigm without a risky rewrite.
 
 ## Goal-Driven Completion Contract
 

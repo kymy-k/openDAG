@@ -140,21 +140,21 @@ A safe conversion order:
 7. Verify.
 8. Repeat for adjacent nodes.
 
-## 8. Install The Converter Skill
+## 8. Install The openDAG Skill
 
-This repo includes a Codex skill for converting existing repositories:
+This repo includes one Codex skill for the implementation workflow and repository conversion workflow:
 
-[functional-dag-repo-converter-skill](functional-dag-repo-converter-skill/SKILL.md)
+[opendag](opendag/SKILL.md)
 
 Install it:
 
 ```bash
 mkdir -p ~/.codex/skills
-cp -R functional-dag-repo-converter-skill ~/.codex/skills/
+cp -R opendag ~/.codex/skills/
 ```
 
 Then invoke it in another repo:
 
 ```text
-Use functional-dag-repo-converter-skill to convert this repo incrementally to a pure functional DAG contract workflow.
+Use opendag to convert this repo incrementally to a pure functional DAG contract workflow.
 ```

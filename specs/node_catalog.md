@@ -181,7 +181,7 @@ This catalog is generated from `specs/dag.json`. Update the DAG first, then rege
 - **Invariants:**
   - Top-level package build entrypoint may invoke the TypeScript compiler through the npm shell only.
   - Build output is generated from committed source, contracts, and tool entrypoints.
-- **Allowed files:** `.nvmrc`, `LICENSE`, `contracts/contractTypes.ts`, `package-lock.json`, `package.json`, `specs/dag.json`, `src/index.ts`, `tools/create-node.ts`, `tools/generate-node-docs.ts`, `tools/validate-dag.ts`, `tools/verify-all.ts`, `tools/verify-node.ts`, `tools/visualise.ts`, `tsconfig.build.json`, `tsconfig.json`
+- **Allowed files:** `.nvmrc`, `LICENSE`, `contracts/contractTypes.ts`, `package-lock.json`, `package.json`, `specs/dag.json`, `src/index.ts`, `tools/create-node.ts`, `tools/generate-node-docs.ts`, `tools/validate-dag.ts`, `tools/verify-all.ts`, `tools/verify-file-scope.ts`, `tools/verify-node.ts`, `tools/visualise.ts`, `tsconfig.build.json`, `tsconfig.json`
 
 ## command.checkDocs
 
@@ -223,13 +223,13 @@ This catalog is generated from `specs/dag.json`. Update the DAG first, then rege
 
 - **Kind:** `imperative`
 - **Status:** `verified`
-- **What it does:** Expose opendag-install-skills as the package CLI that installs bundled openDAG Codex skills for user discovery.
+- **What it does:** Expose opendag-install-skills as the package CLI that installs the bundled opendag Codex skill for user discovery.
 - **Input it expects:** `process argv with optional --link flag`
-- **Output it gives:** `installed skill folders and terminal status output`
+- **Output it gives:** `installed opendag skill folder and terminal status output`
 - **Dependencies:** `tools.installSkills.main`
 - **Invariants:**
-  - Top-level command entrypoint may install bundled skills into CODEX_HOME or ~/.codex only.
-- **Allowed files:** `contracts/contractTypes.ts`, `functional-dag-agent-skill/SKILL.md`, `functional-dag-repo-converter-skill/SKILL.md`, `package.json`, `specs/dag.json`, `tools/install-skills.ts`
+  - Top-level command entrypoint may install the bundled opendag skill into CODEX_HOME or ~/.codex only.
+- **Allowed files:** `contracts/contractTypes.ts`, `opendag/SKILL.md`, `package.json`, `specs/dag.json`, `tools/install-skills.ts`
 
 ## command.package
 
@@ -242,7 +242,7 @@ This catalog is generated from `specs/dag.json`. Update the DAG first, then rege
 - **Invariants:**
   - Package assembly must run verification and build through npm lifecycle scripts before publication.
   - Published artifacts must come from declared package files and generated dist output.
-- **Allowed files:** `.nvmrc`, `AGENTS.md`, `LICENSE`, `README.md`, `SETUP_GUIDE.md`, `contracts/contractTypes.ts`, `functional-dag-agent-skill/SKILL.md`, `functional-dag-repo-converter-skill/SKILL.md`, `package-lock.json`, `package.json`, `specs/dag.json`, `specs/node_catalog.md`, `specs/user_spec.md`, `src/index.ts`, `templates/node.contract.template.ts`, `templates/node.implementation.template.ts`, `templates/node.test.template.ts`, `tools/create-node.ts`, `tools/generate-node-docs.ts`, `tools/validate-dag.ts`, `tools/verify-all.ts`, `tools/verify-node.ts`, `tools/visualise.ts`
+- **Allowed files:** `.nvmrc`, `AGENTS.md`, `LICENSE`, `README.md`, `SETUP_GUIDE.md`, `contracts/contractTypes.ts`, `opendag/SKILL.md`, `opendag/agent/functional-dag-agent.md`, `opendag/repo-converter/functional-dag-repo-converter.md`, `package-lock.json`, `package.json`, `specs/dag.json`, `specs/node_catalog.md`, `specs/user_spec.md`, `src/index.ts`, `templates/node.contract.template.ts`, `templates/node.implementation.template.ts`, `templates/node.test.template.ts`, `tools/create-node.ts`, `tools/generate-node-docs.ts`, `tools/validate-dag.ts`, `tools/verify-all.ts`, `tools/verify-file-scope.ts`, `tools/verify-node.ts`, `tools/visualise.ts`
 
 ## command.validateDag
 
@@ -267,6 +267,18 @@ This catalog is generated from `specs/dag.json`. Update the DAG first, then rege
 - **Invariants:**
   - Top-level command entrypoint may run full-project verification through shell functions only.
 - **Allowed files:** `contracts/contractTypes.ts`, `package.json`, `specs/dag.json`, `specs/node_catalog.md`, `tools/generate-node-docs.ts`, `tools/validate-dag.ts`, `tools/verify-all.ts`
+
+## command.verifyFileScope
+
+- **Kind:** `imperative`
+- **Status:** `verified`
+- **What it does:** Expose npm run verify:file-scope as the command entrypoint that forces one-file-only subagent patch validation.
+- **Input it expects:** `process argv from npm run verify:file-scope with editableFile`
+- **Output it gives:** `file-scope validation report and process exit code`
+- **Dependencies:** `tools.verifyFileScope.main`
+- **Invariants:**
+  - Top-level command entrypoint only checks git changed file paths against a single editable file.
+- **Allowed files:** `contracts/contractTypes.ts`, `package-lock.json`, `package.json`, `specs/dag.json`, `tools/verify-file-scope.ts`
 
 ## command.verifyNode
 
@@ -402,34 +414,47 @@ This catalog is generated from `specs/dag.json`. Update the DAG first, then rege
 - **Dependencies:** None
 - **Invariants:**
   - Skill helper mutates only local script traversal state.
-- **Allowed files:** `contracts/contractTypes.ts`, `functional-dag-agent-skill/SKILL.md`, `functional-dag-agent-skill/scripts/check-dag-json.mjs`, `specs/dag.json`
+- **Allowed files:** `contracts/contractTypes.ts`, `opendag/agent/functional-dag-agent.md`, `opendag/agent/scripts/check-dag-json.mjs`, `specs/dag.json`
 
-## skill.functionalDagAgentSkill
+## skill.opendag
 
 - **Kind:** `skill`
 - **Status:** `verified`
-- **What it does:** Package reusable Codex master/subagent instructions, templates, and helper scripts for applying the functional DAG workflow while implementing coding tasks.
+- **What it does:** Expose one installable Codex skill named opendag that includes both the contract-first agent workflow and the repository converter workflow.
+- **Input it expects:** `Codex task context for implementation, node assignment, verification, or repository conversion work`
+- **Output it gives:** `single opendag skill entrypoint with routed guidance for agent workflow and repo-converter workflow usage`
+- **Dependencies:** `skill.opendagAgentWorkflow`, `skill.opendagRepoConverterWorkflow`
+- **Invariants:**
+  - The skill front door is named opendag for installation and discovery.
+  - Both the agent workflow and repo-converter workflow remain available from the single skill.
+- **Allowed files:** `contracts/contractTypes.ts`, `opendag/SKILL.md`, `opendag/agent/functional-dag-agent.md`, `opendag/repo-converter/functional-dag-repo-converter.md`, `specs/dag.json`
+
+## skill.opendagAgentWorkflow
+
+- **Kind:** `skill`
+- **Status:** `verified`
+- **What it does:** Package the agent-workflow reference, assignment templates, and helper scripts that live inside the single installable opendag Codex skill.
 - **Input it expects:** `Codex task context for a repo that may or may not already use openDAG`
-- **Output it gives:** `master workflow guidance, node subagent assignment rules, templates, and helper scripts for DAG-based implementation`
+- **Output it gives:** `agent workflow guidance, node subagent assignment rules, templates, and helper scripts for DAG-based implementation`
 - **Dependencies:** `skill.checkDagJson.visit`, `template.skillTypescriptZodNode.run`
 - **Invariants:**
-  - Skill artifact is tracked in the DAG as a reusable workflow component.
-- **Allowed files:** `contracts/contractTypes.ts`, `functional-dag-agent-skill/SKILL.md`, `functional-dag-agent-skill/scripts/check-dag-json.mjs`, `functional-dag-agent-skill/scripts/scaffold-ts-zod-node.mjs`, `functional-dag-agent-skill/templates/dag-node.md`, `functional-dag-agent-skill/templates/master-feature-plan.md`, `functional-dag-agent-skill/templates/subagent-assignment.md`, `functional-dag-agent-skill/templates/typescript-zod-node.contract.template.ts`, `functional-dag-agent-skill/templates/typescript-zod-node.implementation.template.ts`, `functional-dag-agent-skill/templates/typescript-zod-node.test.template.ts`, `specs/dag.json`
+  - Agent workflow artifact is tracked in the DAG as part of the single installable opendag skill.
+- **Allowed files:** `contracts/contractTypes.ts`, `opendag/SKILL.md`, `opendag/agent/functional-dag-agent.md`, `opendag/agent/scripts/check-dag-json.mjs`, `opendag/agent/scripts/scaffold-ts-zod-node.mjs`, `opendag/agent/templates/dag-node.md`, `opendag/agent/templates/master-feature-plan.md`, `opendag/agent/templates/subagent-assignment.md`, `opendag/agent/templates/typescript-zod-node.contract.template.ts`, `opendag/agent/templates/typescript-zod-node.implementation.template.ts`, `opendag/agent/templates/typescript-zod-node.test.template.ts`, `specs/dag.json`
 
-## skill.functionalDagRepoConverterSkill
+## skill.opendagRepoConverterWorkflow
 
 - **Kind:** `skill`
 - **Status:** `verified`
-- **What it does:** Package reusable Codex instructions, templates, and scanner helpers for aggressively converting an existing repository or explicit user-requested scope toward contract-first functional DAG architecture until all in-scope repo-owned functions are represented or explicitly blocked.
+- **What it does:** Package the repo-converter reference, scanner helper, templates, and completion rules that live inside the single installable opendag Codex skill.
 - **Input it expects:** `existing repository source tree, conversion goal, and optional user-scoped conversion paths such as directories, files, workflows, features, or packages`
 - **Output it gives:** `goal-driven conversion workflow, scoped or full-repo completion criteria, DAG template, AGENTS template, conversion plan template, repo scan helper, and uncovered-function work queue semantics`
 - **Dependencies:** `skill.repoScan.extractNamedFunctions`, `skill.repoScan.functionAppearsCovered`, `skill.repoScan.isSourceFile`, `skill.repoScan.nodeHasSeparateTest`, `skill.repoScan.nodeIsInScanScope`, `skill.repoScan.readDagCoverage`, `skill.repoScan.safeRead`, `skill.repoScan.walk`
 - **Invariants:**
-  - Skill artifact is tracked in the DAG as a reusable conversion component.
+  - Repo-converter workflow artifact is tracked in the DAG as part of the single installable opendag skill.
   - Full conversion mode does not stop while scanner-reported repo-owned functions remain uncovered unless each remaining item has a concrete blocker or exclusion.
   - Scoped conversion mode may complete for explicit paths only when the finish report clearly states that out-of-scope repo areas remain unconverted.
   - Every in-scope DAG node must have a separate tests/ file derived from its spec before conversion is complete.
-- **Allowed files:** `contracts/contractTypes.ts`, `functional-dag-repo-converter-skill/SKILL.md`, `functional-dag-repo-converter-skill/scripts/repo-scan.mjs`, `functional-dag-repo-converter-skill/templates/AGENTS.md.template`, `functional-dag-repo-converter-skill/templates/conversion-plan.md.template`, `functional-dag-repo-converter-skill/templates/dag.json.template`, `functional-dag-repo-converter-skill/templates/tests/node.test.template.md`, `specs/dag.json`, `tests/repo-scan.test.ts`
+- **Allowed files:** `contracts/contractTypes.ts`, `opendag/SKILL.md`, `opendag/repo-converter/functional-dag-repo-converter.md`, `opendag/repo-converter/scripts/repo-scan.mjs`, `opendag/repo-converter/templates/AGENTS.md.template`, `opendag/repo-converter/templates/conversion-plan.md.template`, `opendag/repo-converter/templates/dag.json.template`, `opendag/repo-converter/templates/tests/node.test.template.md`, `specs/dag.json`, `tests/repo-scan.test.ts`
 
 ## skill.repoScan.extractNamedFunctions
 
@@ -442,7 +467,7 @@ This catalog is generated from `specs/dag.json`. Update the DAG first, then rege
 - **Invariants:**
   - Deterministic parser heuristic with no filesystem access.
   - Duplicate names of the same kind in the same file are reported once.
-- **Allowed files:** `contracts/contractTypes.ts`, `functional-dag-repo-converter-skill/SKILL.md`, `functional-dag-repo-converter-skill/scripts/repo-scan.mjs`, `specs/dag.json`, `tests/repo-scan.test.ts`
+- **Allowed files:** `contracts/contractTypes.ts`, `opendag/repo-converter/functional-dag-repo-converter.md`, `opendag/repo-converter/scripts/repo-scan.mjs`, `specs/dag.json`, `tests/repo-scan.test.ts`
 
 ## skill.repoScan.functionAppearsCovered
 
@@ -455,7 +480,7 @@ This catalog is generated from `specs/dag.json`. Update the DAG first, then rege
 - **Invariants:**
   - Deterministic helper with no filesystem access.
   - A function is covered only when its file is allowed by some DAG node and a node id names or contains the function name.
-- **Allowed files:** `contracts/contractTypes.ts`, `functional-dag-repo-converter-skill/SKILL.md`, `functional-dag-repo-converter-skill/scripts/repo-scan.mjs`, `specs/dag.json`, `tests/repo-scan.test.ts`
+- **Allowed files:** `contracts/contractTypes.ts`, `opendag/repo-converter/functional-dag-repo-converter.md`, `opendag/repo-converter/scripts/repo-scan.mjs`, `specs/dag.json`, `tests/repo-scan.test.ts`
 
 ## skill.repoScan.isSourceFile
 
@@ -468,7 +493,7 @@ This catalog is generated from `specs/dag.json`. Update the DAG first, then rege
 - **Invariants:**
   - Deterministic helper with no filesystem access.
   - Only extension-based classification is performed.
-- **Allowed files:** `contracts/contractTypes.ts`, `functional-dag-repo-converter-skill/SKILL.md`, `functional-dag-repo-converter-skill/scripts/repo-scan.mjs`, `specs/dag.json`, `tests/repo-scan.test.ts`
+- **Allowed files:** `contracts/contractTypes.ts`, `opendag/repo-converter/functional-dag-repo-converter.md`, `opendag/repo-converter/scripts/repo-scan.mjs`, `specs/dag.json`, `tests/repo-scan.test.ts`
 
 ## skill.repoScan.nodeHasSeparateTest
 
@@ -480,7 +505,7 @@ This catalog is generated from `specs/dag.json`. Update the DAG first, then rege
 - **Dependencies:** None
 - **Invariants:**
   - Deterministic helper with no filesystem access.
-- **Allowed files:** `contracts/contractTypes.ts`, `functional-dag-repo-converter-skill/SKILL.md`, `functional-dag-repo-converter-skill/scripts/repo-scan.mjs`, `specs/dag.json`, `tests/repo-scan.test.ts`
+- **Allowed files:** `contracts/contractTypes.ts`, `opendag/repo-converter/functional-dag-repo-converter.md`, `opendag/repo-converter/scripts/repo-scan.mjs`, `specs/dag.json`, `tests/repo-scan.test.ts`
 
 ## skill.repoScan.nodeIsInScanScope
 
@@ -492,7 +517,7 @@ This catalog is generated from `specs/dag.json`. Update the DAG first, then rege
 - **Dependencies:** None
 - **Invariants:**
   - Deterministic helper with no filesystem access.
-- **Allowed files:** `contracts/contractTypes.ts`, `functional-dag-repo-converter-skill/SKILL.md`, `functional-dag-repo-converter-skill/scripts/repo-scan.mjs`, `specs/dag.json`, `tests/repo-scan.test.ts`
+- **Allowed files:** `contracts/contractTypes.ts`, `opendag/repo-converter/functional-dag-repo-converter.md`, `opendag/repo-converter/scripts/repo-scan.mjs`, `specs/dag.json`, `tests/repo-scan.test.ts`
 
 ## skill.repoScan.readDagCoverage
 
@@ -505,7 +530,7 @@ This catalog is generated from `specs/dag.json`. Update the DAG first, then rege
 - **Invariants:**
   - Skill helper is intentionally imperative because it reads specs/dag.json.
   - Invalid or missing DAG files produce empty coverage instead of stopping the scan.
-- **Allowed files:** `contracts/contractTypes.ts`, `functional-dag-repo-converter-skill/SKILL.md`, `functional-dag-repo-converter-skill/scripts/repo-scan.mjs`, `specs/dag.json`, `tests/repo-scan.test.ts`
+- **Allowed files:** `contracts/contractTypes.ts`, `opendag/repo-converter/functional-dag-repo-converter.md`, `opendag/repo-converter/scripts/repo-scan.mjs`, `specs/dag.json`, `tests/repo-scan.test.ts`
 
 ## skill.repoScan.safeRead
 
@@ -518,7 +543,7 @@ This catalog is generated from `specs/dag.json`. Update the DAG first, then rege
 - **Invariants:**
   - Skill helper is intentionally imperative because it reads the filesystem.
   - Read failures are local to the scanned file and do not abort the scan.
-- **Allowed files:** `contracts/contractTypes.ts`, `functional-dag-repo-converter-skill/SKILL.md`, `functional-dag-repo-converter-skill/scripts/repo-scan.mjs`, `specs/dag.json`, `tests/repo-scan.test.ts`
+- **Allowed files:** `contracts/contractTypes.ts`, `opendag/repo-converter/functional-dag-repo-converter.md`, `opendag/repo-converter/scripts/repo-scan.mjs`, `specs/dag.json`, `tests/repo-scan.test.ts`
 
 ## skill.repoScan.walk
 
@@ -530,7 +555,7 @@ This catalog is generated from `specs/dag.json`. Update the DAG first, then rege
 - **Dependencies:** None
 - **Invariants:**
   - Skill helper is intentionally imperative because it scans the filesystem.
-- **Allowed files:** `contracts/contractTypes.ts`, `functional-dag-repo-converter-skill/SKILL.md`, `functional-dag-repo-converter-skill/scripts/repo-scan.mjs`, `specs/dag.json`, `tests/repo-scan.test.ts`
+- **Allowed files:** `contracts/contractTypes.ts`, `opendag/repo-converter/functional-dag-repo-converter.md`, `opendag/repo-converter/scripts/repo-scan.mjs`, `specs/dag.json`, `tests/repo-scan.test.ts`
 
 ## template.nodeImplementation.run
 
@@ -548,13 +573,13 @@ This catalog is generated from `specs/dag.json`. Update the DAG first, then rege
 
 - **Kind:** `template`
 - **Status:** `verified`
-- **What it does:** Define the placeholder TypeScript/Zod run function shape distributed inside the reusable functional DAG agent skill.
+- **What it does:** Define the placeholder TypeScript/Zod run function shape distributed inside the opendag agent workflow templates.
 - **Input it expects:** `Input type from the skill node contract template`
 - **Output it gives:** `Output type from the skill node contract template`
 - **Dependencies:** None
 - **Invariants:**
   - Template function describes the reusable contract-first node shape.
-- **Allowed files:** `contracts/contractTypes.ts`, `functional-dag-agent-skill/templates/typescript-zod-node.contract.template.ts`, `functional-dag-agent-skill/templates/typescript-zod-node.implementation.template.ts`, `functional-dag-agent-skill/templates/typescript-zod-node.test.template.ts`, `specs/dag.json`
+- **Allowed files:** `contracts/contractTypes.ts`, `opendag/agent/templates/typescript-zod-node.contract.template.ts`, `opendag/agent/templates/typescript-zod-node.implementation.template.ts`, `opendag/agent/templates/typescript-zod-node.test.template.ts`, `specs/dag.json`
 
 ## test.repoScan.makeRepo
 
@@ -656,37 +681,37 @@ This catalog is generated from `specs/dag.json`. Update the DAG first, then rege
 
 - **Kind:** `imperative`
 - **Status:** `verified`
-- **What it does:** Walk upward from the running installer file until locating the openDAG package root that contains package.json and bundled skill folders.
+- **What it does:** Walk upward from the running installer file until locating the openDAG package root that contains package.json and the bundled opendag skill folder.
 - **Input it expects:** `startDir: string absolute directory path`
-- **Output it gives:** `absolute openDAG package root path, or thrown error when bundled skills are missing`
+- **Output it gives:** `absolute openDAG package root path, or thrown error when the bundled opendag skill is missing`
 - **Dependencies:** None
 - **Invariants:**
   - Imperative shell helper may inspect the local filesystem.
-- **Allowed files:** `contracts/contractTypes.ts`, `functional-dag-agent-skill/SKILL.md`, `functional-dag-repo-converter-skill/SKILL.md`, `package.json`, `specs/dag.json`, `tools/install-skills.ts`
+- **Allowed files:** `contracts/contractTypes.ts`, `opendag/SKILL.md`, `package.json`, `specs/dag.json`, `tools/install-skills.ts`
 
 ## tools.installSkills.installSkill
 
 - **Kind:** `imperative`
 - **Status:** `verified`
-- **What it does:** Install one bundled openDAG Codex skill into the target Codex skills directory by copying it or linking it in development mode.
+- **What it does:** Install the bundled opendag Codex skill into the target Codex skills directory by copying it or linking it in development mode.
 - **Input it expects:** `packageRoot: string, targetRoot: string, skillName: string, link: boolean`
-- **Output it gives:** `void; creates or replaces the installed skill folder`
+- **Output it gives:** `void; creates or replaces the installed opendag skill folder`
 - **Dependencies:** None
 - **Invariants:**
   - Imperative shell helper may remove, copy, or symlink skill folders.
-- **Allowed files:** `contracts/contractTypes.ts`, `functional-dag-agent-skill/SKILL.md`, `functional-dag-repo-converter-skill/SKILL.md`, `package.json`, `specs/dag.json`, `tools/install-skills.ts`
+- **Allowed files:** `contracts/contractTypes.ts`, `opendag/SKILL.md`, `package.json`, `specs/dag.json`, `tools/install-skills.ts`
 
 ## tools.installSkills.main
 
 - **Kind:** `imperative`
 - **Status:** `verified`
-- **What it does:** Expose the opendag-install-skills CLI that installs bundled openDAG Codex skills into CODEX_HOME or ~/.codex for discovery by new Codex sessions.
+- **What it does:** Expose the opendag-install-skills CLI that installs the bundled opendag Codex skill into CODEX_HOME or ~/.codex for discovery by new Codex sessions.
 - **Input it expects:** `process argv with optional --link flag and optional CODEX_HOME environment variable`
-- **Output it gives:** `installed skill folders and terminal status output`
+- **Output it gives:** `installed opendag skill folder and terminal status output`
 - **Dependencies:** `tools.installSkills.findPackageRoot`, `tools.installSkills.installSkill`
 - **Invariants:**
   - Top-level command entrypoint may write only to the Codex skills installation directory.
-- **Allowed files:** `contracts/contractTypes.ts`, `functional-dag-agent-skill/SKILL.md`, `functional-dag-repo-converter-skill/SKILL.md`, `package.json`, `specs/dag.json`, `tools/install-skills.ts`
+- **Allowed files:** `contracts/contractTypes.ts`, `opendag/SKILL.md`, `package.json`, `specs/dag.json`, `tools/install-skills.ts`
 
 ## tools.validateDag.main
 
@@ -735,6 +760,66 @@ This catalog is generated from `specs/dag.json`. Update the DAG first, then rege
 - **Invariants:**
   - Imperative shell helper may spawn child processes.
 - **Allowed files:** `contracts/contractTypes.ts`, `specs/dag.json`, `tools/verify-all.ts`
+
+## tools.verifyFileScope.main
+
+- **Kind:** `imperative`
+- **Status:** `verified`
+- **What it does:** Run the verify-file-scope CLI by validating the current git changes against one editable file and reporting pass or fail.
+- **Input it expects:** `process argv with editableFile`
+- **Output it gives:** `terminal report and process exit code`
+- **Dependencies:** `tools.verifyFileScope.usage`, `tools.verifyFileScope.verifyFileScope`
+- **Invariants:**
+  - Imperative shell helper does not mutate repository contents.
+- **Allowed files:** `contracts/contractTypes.ts`, `specs/dag.json`, `tools/verify-file-scope.ts`
+
+## tools.verifyFileScope.parseGitStatusPaths
+
+- **Kind:** `helper`
+- **Status:** `verified`
+- **What it does:** Parse porcelain git status output into a unique list of changed repo-relative file paths for file-scope validation.
+- **Input it expects:** `statusOutput: string from git status --porcelain=v1`
+- **Output it gives:** `unique changed file path strings`
+- **Dependencies:** None
+- **Invariants:**
+  - Deterministic helper with no filesystem access.
+- **Allowed files:** `contracts/contractTypes.ts`, `specs/dag.json`, `tools/verify-file-scope.ts`
+
+## tools.verifyFileScope.readChangedFiles
+
+- **Kind:** `imperative`
+- **Status:** `verified`
+- **What it does:** Read current git working tree status and return the changed file paths that must be checked against the subagent editable file.
+- **Input it expects:** `current process working tree`
+- **Output it gives:** `unique changed file path strings`
+- **Dependencies:** `tools.verifyFileScope.parseGitStatusPaths`
+- **Invariants:**
+  - Imperative shell helper reads git status without mutating repository contents.
+- **Allowed files:** `contracts/contractTypes.ts`, `specs/dag.json`, `tools/verify-file-scope.ts`
+
+## tools.verifyFileScope.usage
+
+- **Kind:** `imperative`
+- **Status:** `verified`
+- **What it does:** Print verify-file-scope CLI usage and exit when the required editable file argument is missing.
+- **Input it expects:** `process argv missing editableFile`
+- **Output it gives:** `usage text on stderr and process exit code 1`
+- **Dependencies:** None
+- **Invariants:**
+  - Imperative shell helper only writes usage text and exits.
+- **Allowed files:** `contracts/contractTypes.ts`, `specs/dag.json`, `tools/verify-file-scope.ts`
+
+## tools.verifyFileScope.verifyFileScope
+
+- **Kind:** `imperative`
+- **Status:** `verified`
+- **What it does:** Bridge current git changed files into the pure file-edit-scope validator for one editable file.
+- **Input it expects:** `editableFile: string`
+- **Output it gives:** `validateFileEditScope result for current git changes`
+- **Dependencies:** `tools.verifyFileScope.readChangedFiles`, `validateFileEditScope`
+- **Invariants:**
+  - Imperative shell helper delegates scope decisions to the pure validator.
+- **Allowed files:** `contracts/contractTypes.ts`, `specs/dag.json`, `src/nodes/validateFileEditScope/implementation.ts`, `tools/verify-file-scope.ts`
 
 ## tools.verifyNode.runCommand
 
@@ -859,6 +944,33 @@ This catalog is generated from `specs/dag.json`. Update the DAG first, then rege
 - **Invariants:**
   - Deterministic helper with no filesystem access.
 - **Allowed files:** `contracts/contractTypes.ts`, `specs/dag.json`, `src/nodes/validateDag/implementation.ts`, `src/nodes/validateDag/tests.test.ts`
+
+## validateFileEditScope
+
+- **Kind:** `pure`
+- **Status:** `verified`
+- **What it does:** Validate that a file-scoped subagent patch changes only the single file assigned as editable.
+- **Input it expects:** `{ editableFile: string, changedFiles: string[] }`
+- **Output it gives:** `{ ok: boolean, errors: string[], editableFile?: string, changedFiles?: string[] }`
+- **Dependencies:** `validateFileEditScope.normalizeRepoPath`
+- **Invariants:**
+  - The function is pure and deterministic.
+  - The editable file and every changed file must normalize to repo-relative paths.
+  - Valid output has ok true when all changed paths equal the one editable file.
+  - Invalid output has ok false and explains every out-of-scope changed path.
+- **Allowed files:** `contracts/contractTypes.ts`, `specs/dag.json`, `specs/user_spec.md`, `src/nodes/validateFileEditScope/contract.ts`, `src/nodes/validateFileEditScope/implementation.ts`, `src/nodes/validateFileEditScope/tests.test.ts`
+
+## validateFileEditScope.normalizeRepoPath
+
+- **Kind:** `helper`
+- **Status:** `verified`
+- **What it does:** Normalize one file-scope path into a repo-relative path or reject it when it is absolute, empty, or escapes the repository.
+- **Input it expects:** `filePath: string`
+- **Output it gives:** `normalized repo-relative path string, or null when invalid`
+- **Dependencies:** None
+- **Invariants:**
+  - Deterministic helper with no filesystem access.
+- **Allowed files:** `contracts/contractTypes.ts`, `specs/dag.json`, `src/nodes/validateFileEditScope/implementation.ts`
 
 ## visualClient.connectedToSelected
 

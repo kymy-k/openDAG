@@ -1,11 +1,6 @@
----
-name: functional-dag-agent-skill
-description: Master/subagent contract-first functional DAG workflow for complex coding tasks. Use when Codex is starting a complex implementation, decomposing work into pure typed DAG nodes, acting as a master agent, assigning one node to a subagent, implementing a single assigned node, verifying contracts/tests, enforcing allowedFiles boundaries, or refusing to mutate unrelated modules. Reusable across repositories; only assume the openDAG repo layout when the project has explicitly opted into it.
----
+# openDAG Agent Workflow
 
-# Functional DAG Agent Skill
-
-Use this skill to turn coding work into small, typed, contract-first functional units. Prefer it when the task has meaningful complexity, multiple steps, cross-module risk, or agent-boundary concerns.
+Use this workflow through the root `opendag` skill to turn coding work into small, typed, contract-first functional units. Prefer it when the task has meaningful complexity, multiple steps, cross-module risk, or agent-boundary concerns.
 
 ## Core Rule
 
@@ -20,13 +15,13 @@ The master agent:
 - Owns the global spec, DAG, contracts, public I/O, dependencies, and architecture.
 - Decomposes features into node assignments before implementation.
 - May edit `specs/dag.json`, contracts, shell entrypoints, and shared architecture when the requested feature requires it.
-- Creates one assignment packet per node and, when the runtime and user authorization allow delegation, spawns one subagent per node.
-- Reviews every subagent patch against that node's `allowedFiles`, rejects out-of-scope edits, runs node verification, then runs full verification.
+- Creates one assignment packet per editable file and, when the runtime and user authorization allow delegation, spawns one subagent per file.
+- Reviews every subagent patch against that single editable file, rejects out-of-scope edits, runs file-scope verification, runs node verification, then runs full verification.
 
 A node subagent:
 
-- Implements or tests exactly one assigned node.
-- May modify only files listed in that node's `allowedFiles`.
+- Implements or tests exactly one assigned node for exactly one assigned editable file.
+- May read other files for context, including files listed in that node's `allowedFiles`, but may modify only the assignment's single editable file.
 - Must not edit DAG entries, shared contracts, package scripts, verification tools, public interfaces, architecture, or another node unless the master assignment explicitly includes those files.
 - Must not broaden its own scope. If blocked, it writes a proposed DAG/contract change for the master instead of applying it.
 
@@ -59,7 +54,7 @@ Before editing:
    - verification command
 5. Check that dependencies are acyclic and that each node is independently testable.
 6. Write or update contracts and tests before implementation when feasible.
-7. Create node assignment packets. Use one packet per subagent or per local implementation pass.
+7. Create file-scoped node assignment packets. Use one packet per editable file per subagent or local implementation pass.
 8. Implement only after contracts and tests exist, unless the user explicitly requests exploratory prototyping.
 
 Use `templates/dag-node.md` as a compact checklist when a repo has no existing DAG format.
@@ -72,26 +67,27 @@ For every feature:
 1. Read local agent instructions and the DAG.
 2. Decide which files are master-owned: DAG, public I/O, shared contracts, shell commands, docs, verification.
 3. Decide node boundaries and update DAG/contracts/tests.
-4. For each implementation node, prepare an assignment with exact `allowedFiles`.
-5. Delegate only when useful and allowed by the execution environment. Assign one node per subagent.
+4. For each implementation node, prepare one assignment per editable file, selecting that file from the node's `allowedFiles`.
+5. Delegate only when useful and allowed by the execution environment. Assign one node and one editable file per subagent.
 6. Review subagent output before integration:
-   - changed files must be a subset of the assigned node's `allowedFiles`
+   - changed files must be exactly empty or the assignment's single editable file
    - tests must not be weakened
    - public I/O must match the master-approved contract
    - no hidden effects inside pure nodes
-7. Run node verification for accepted node work.
-8. Regenerate DAG docs and run full verification.
+7. Run `npm run verify:file-scope -- <editableFile>` for accepted subagent work.
+8. Run node verification for accepted node work.
+9. Regenerate DAG docs and run full verification.
 
 ## Implementing One Assigned Node
 
 1. Confirm you are acting as a node subagent, not master.
 2. Read the global spec and DAG/contract entry for the assigned node.
-3. Confirm the node's allowed files and public interface.
+3. Confirm the node's allowed files, the assignment's single editable file, and public interface.
 4. Write or update tests against the contract before implementation when feasible.
 5. Implement the pure function only inside the assigned scope.
 6. Validate input and output at the boundary when the local stack supports schemas, such as Zod in TypeScript.
 7. Do not edit upstream/downstream node interfaces to make the implementation easier.
-8. Do not edit `specs/dag.json`, shared contracts, package scripts, verification tools, other nodes, or global architecture.
+8. Do not edit any file except the assignment's single editable file, including `specs/dag.json`, shared contracts, package scripts, verification tools, other nodes, or global architecture.
 9. Run the node-level verification command and any relevant typecheck/lint command.
 
 If the contract is impossible or underspecified, stop implementation for that part and write a proposed contract change with rationale.
@@ -120,7 +116,8 @@ npm run verify:all
 Treat individual agents as untrusted implementers:
 
 - Master agents may change DAG/contracts/architecture; subagents may not.
-- Subagents are constrained to one node and its exact `allowedFiles`.
+- Subagents are constrained to one node and exactly one editable file selected by the master from that node's `allowedFiles`.
+- Subagents may read other files for context but may only edit that one file's contents.
 - Do not silently mutate unrelated modules.
 - Do not change public interfaces unless explicitly requested.
 - Do not weaken tests to pass.
@@ -139,10 +136,11 @@ Role: node subagent
 Assigned node: <node id>
 Goal: implement or test only this node
 Contract: <input schema, output schema, invariants, dependencies>
-Allowed files: <exact allowedFiles list>
-Forbidden edits: DAG, shared contracts, package scripts, verification tools, public I/O, architecture, other nodes unless explicitly listed in allowed files and approved by master
+Editable file: <exactly one file from allowedFiles>
+Read-only context files: <other files the subagent may inspect but not edit>
+Forbidden edits: every file except Editable file, including DAG, shared contracts, package scripts, verification tools, public I/O, architecture, and other nodes unless that file is the Editable file and approved by master
 If blocked: write a proposed DAG/contract change; do not apply it
-Verification: <node-level command>
+Verification: npm run verify:file-scope -- <editableFile> and <node-level command>
 Return: changed files, behavior summary, verification results, proposed changes if any
 ```
 

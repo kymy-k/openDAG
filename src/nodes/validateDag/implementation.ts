@@ -5,8 +5,7 @@ const allowedReferencePrefixes = ["specs/", "contracts/", "tests/"];
 const allowedGlobalPrefixes = [
   "tools/",
   "templates/",
-  "functional-dag-agent-skill/",
-  "functional-dag-repo-converter-skill/",
+  "opendag/",
   "README.md",
   "SETUP_GUIDE.md",
   "AGENTS.md",
