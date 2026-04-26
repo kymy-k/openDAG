@@ -37,6 +37,7 @@
   "bin": {
     "opendag-create-node": "dist/tools/create-node.js",
     "opendag-generate-docs": "dist/tools/generate-node-docs.js",
+    "opendag-install-skills": "dist/tools/install-skills.js",
     "opendag-validate-dag": "dist/tools/validate-dag.js",
     "opendag-verify-all": "dist/tools/verify-all.js",
     "opendag-verify-node": "dist/tools/verify-node.js",
@@ -60,6 +61,7 @@
     "create:node": "tsx tools/create-node.ts",
     "generate:docs": "tsx tools/generate-node-docs.ts",
     "check:docs": "tsx tools/generate-node-docs.ts --check",
+    "install:skills": "tsx tools/install-skills.ts",
     "visualise": "tsx tools/visualise.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",

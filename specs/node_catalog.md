@@ -219,6 +219,18 @@ This catalog is generated from `specs/dag.json`. Update the DAG first, then rege
   - Top-level command entrypoint may write only generated documentation after DAG validation succeeds.
 - **Allowed files:** `contracts/contractTypes.ts`, `package.json`, `specs/dag.json`, `specs/node_catalog.md`, `tools/generate-node-docs.ts`
 
+## command.installSkills
+
+- **Kind:** `imperative`
+- **Status:** `verified`
+- **What it does:** Expose opendag-install-skills as the package CLI that installs bundled openDAG Codex skills for user discovery.
+- **Input it expects:** `process argv with optional --link flag`
+- **Output it gives:** `installed skill folders and terminal status output`
+- **Dependencies:** `tools.installSkills.main`
+- **Invariants:**
+  - Top-level command entrypoint may install bundled skills into CODEX_HOME or ~/.codex only.
+- **Allowed files:** `contracts/contractTypes.ts`, `functional-dag-agent-skill/SKILL.md`, `functional-dag-repo-converter-skill/SKILL.md`, `package.json`, `specs/dag.json`, `tools/install-skills.ts`
+
 ## command.package
 
 - **Kind:** `imperative`
@@ -639,6 +651,42 @@ This catalog is generated from `specs/dag.json`. Update the DAG first, then rege
 - **Invariants:**
   - Imperative shell helper writes only the generated node catalog file.
 - **Allowed files:** `contracts/contractTypes.ts`, `specs/dag.json`, `specs/node_catalog.md`, `tools/generate-node-docs.ts`
+
+## tools.installSkills.findPackageRoot
+
+- **Kind:** `imperative`
+- **Status:** `verified`
+- **What it does:** Walk upward from the running installer file until locating the openDAG package root that contains package.json and bundled skill folders.
+- **Input it expects:** `startDir: string absolute directory path`
+- **Output it gives:** `absolute openDAG package root path, or thrown error when bundled skills are missing`
+- **Dependencies:** None
+- **Invariants:**
+  - Imperative shell helper may inspect the local filesystem.
+- **Allowed files:** `contracts/contractTypes.ts`, `functional-dag-agent-skill/SKILL.md`, `functional-dag-repo-converter-skill/SKILL.md`, `package.json`, `specs/dag.json`, `tools/install-skills.ts`
+
+## tools.installSkills.installSkill
+
+- **Kind:** `imperative`
+- **Status:** `verified`
+- **What it does:** Install one bundled openDAG Codex skill into the target Codex skills directory by copying it or linking it in development mode.
+- **Input it expects:** `packageRoot: string, targetRoot: string, skillName: string, link: boolean`
+- **Output it gives:** `void; creates or replaces the installed skill folder`
+- **Dependencies:** None
+- **Invariants:**
+  - Imperative shell helper may remove, copy, or symlink skill folders.
+- **Allowed files:** `contracts/contractTypes.ts`, `functional-dag-agent-skill/SKILL.md`, `functional-dag-repo-converter-skill/SKILL.md`, `package.json`, `specs/dag.json`, `tools/install-skills.ts`
+
+## tools.installSkills.main
+
+- **Kind:** `imperative`
+- **Status:** `verified`
+- **What it does:** Expose the opendag-install-skills CLI that installs bundled openDAG Codex skills into CODEX_HOME or ~/.codex for discovery by new Codex sessions.
+- **Input it expects:** `process argv with optional --link flag and optional CODEX_HOME environment variable`
+- **Output it gives:** `installed skill folders and terminal status output`
+- **Dependencies:** `tools.installSkills.findPackageRoot`, `tools.installSkills.installSkill`
+- **Invariants:**
+  - Top-level command entrypoint may write only to the Codex skills installation directory.
+- **Allowed files:** `contracts/contractTypes.ts`, `functional-dag-agent-skill/SKILL.md`, `functional-dag-repo-converter-skill/SKILL.md`, `package.json`, `specs/dag.json`, `tools/install-skills.ts`
 
 ## tools.validateDag.main
 

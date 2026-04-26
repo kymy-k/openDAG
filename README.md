@@ -29,9 +29,12 @@ After the package is published, you can also install the CLI package from npm:
 
 ```bash
 npm install -D @themifaso/opendag
+npx opendag-install-skills
 npx opendag-validate-dag
 npx opendag-visualise
 ```
+
+`npm install` makes the openDAG CLI available to the project. `npx opendag-install-skills` copies the bundled Codex skills into `~/.codex/skills` or `$CODEX_HOME/skills`; start a new Codex session after running it.
 
 ## Commands
 
@@ -144,10 +147,10 @@ For a scoped conversion, pass one or more `--scope` paths and treat completion a
 node functional-dag-repo-converter-skill/scripts/repo-scan.mjs --fail-on-uncovered --fail-on-missing-tests /path/to/repo --scope src/payments
 ```
 
-To install either skill for Codex discovery:
+After installing `@themifaso/opendag`, install the bundled Codex skills into Codex's skill discovery folder:
 
 ```bash
-mkdir -p ~/.codex/skills
-cp -R functional-dag-agent-skill ~/.codex/skills/
-cp -R functional-dag-repo-converter-skill ~/.codex/skills/
+npx opendag-install-skills
 ```
+
+Start a new Codex session after running the installer. npm makes the CLI available, but Codex only discovers skills from its skills directory.
