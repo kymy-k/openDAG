@@ -207,7 +207,7 @@ const foundMarkers = markers.filter((marker) => {
 const sideEffectHits = [];
 const functionCandidates = [];
 for (const file of files) {
-  if (path.relative(root, file) === "opendag/repo-converter/scripts/repo-scan.mjs") {
+  if (path.relative(root, file).replaceAll("\\", "/") === "repo-converter/scripts/repo-scan.mjs") {
     continue;
   }
   if (!isSourceFile(file)) continue;
