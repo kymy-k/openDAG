@@ -20,22 +20,21 @@ function packageRoot() {
 }
 
 function usage() {
-  return `Usage: opendag [--target <skills-dir>] [--codex]
+  return `Usage: opendag --claude|--codex [--target <skills-dir>]
 
-Installs the openDAG skill into a skills directory.
+Installs the openDAG skill into the selected agent's skills directory.
 
 Options:
-  --target <dir>  Install into <dir>/opendag
+  --claude        Install into $CLAUDE_HOME/skills/opendag or ~/.claude/skills/opendag
   --codex         Install into $CODEX_HOME/skills/opendag or ~/.codex/skills/opendag
+  --target <dir>  Override the skills directory and install into <dir>/opendag
   --help          Show this help
-
-Defaults:
-  Uses $SKILLS_HOME/opendag when SKILLS_HOME is set.
-  Otherwise installs into ~/.skills/opendag.`;
+`;
 }
 
 function parseArgs(args) {
   const options = {
+    claude: false,
     codex: false,
     target: null
   };
@@ -46,6 +45,11 @@ function parseArgs(args) {
     if (arg === "--help" || arg === "-h") {
       console.log(usage());
       process.exit(0);
+    }
+
+    if (arg === "--claude") {
+      options.claude = true;
+      continue;
     }
 
     if (arg === "--codex") {
@@ -71,6 +75,14 @@ function parseArgs(args) {
     throw new Error(`Unknown option: ${arg}\n\n${usage()}`);
   }
 
+  if (options.claude && options.codex) {
+    throw new Error("Choose only one target: --claude or --codex");
+  }
+
+  if (!options.claude && !options.codex && !options.target) {
+    throw new Error(`Choose an install target: --claude, --codex, or --target <skills-dir>\n\n${usage()}`);
+  }
+
   return options;
 }
 
@@ -79,16 +91,17 @@ function skillsRoot(options) {
     return path.resolve(options.target);
   }
 
+  if (options.claude) {
+    const claudeHome = process.env.CLAUDE_HOME || path.join(homedir(), ".claude");
+    return path.join(claudeHome, "skills");
+  }
+
   if (options.codex) {
     const codexHome = process.env.CODEX_HOME || path.join(homedir(), ".codex");
     return path.join(codexHome, "skills");
   }
 
-  if (process.env.SKILLS_HOME) {
-    return path.resolve(process.env.SKILLS_HOME);
-  }
-
-  return path.join(homedir(), ".skills");
+  throw new Error("No install target selected");
 }
 
 function installSkill() {

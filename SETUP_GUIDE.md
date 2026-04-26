@@ -7,10 +7,16 @@ This guide shows how to use the `opendag` skill in another repository.
 Install the skill:
 
 ```bash
-npx @themifaso/opendag
+npx @themifaso/opendag --claude
 ```
 
-That installs to `~/.skills/opendag` by default. Use `--target <skills-dir>` for another agent runtime, or `--codex` for Codex.
+or:
+
+```bash
+npx @themifaso/opendag --codex
+```
+
+`--claude` installs to `~/.claude/skills/opendag`. `--codex` installs to `~/.codex/skills/opendag`. Use `--target <skills-dir>` for another agent runtime.
 
 Then start a new agent session and ask for the workflow directly:
 

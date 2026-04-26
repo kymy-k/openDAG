@@ -9,33 +9,37 @@ Use it when you want an agent to structure implementation around explicit node c
 Install from npm:
 
 ```bash
-npx @themifaso/opendag
+npx @themifaso/opendag --claude
 ```
 
-By default, this copies the skill to `~/.skills/opendag`. You can override the skills directory:
-
-```bash
-npx @themifaso/opendag --target ~/.agent/skills
-```
-
-For Codex specifically:
+or:
 
 ```bash
 npx @themifaso/opendag --codex
 ```
 
+`--claude` installs to `~/.claude/skills/opendag`, or `$CLAUDE_HOME/skills/opendag` when `CLAUDE_HOME` is set.
+
+`--codex` installs to `~/.codex/skills/opendag`, or `$CODEX_HOME/skills/opendag` when `CODEX_HOME` is set.
+
+You can override the skills directory for another runtime:
+
+```bash
+npx @themifaso/opendag --target ~/.agent/skills
+```
+
 You can also install this repository directly as an agent skill:
 
 ```bash
-mkdir -p ~/.skills
-git clone https://github.com/kymy-k/openDAG.git ~/.skills/opendag
+mkdir -p ~/.claude/skills
+git clone https://github.com/kymy-k/openDAG.git ~/.claude/skills/opendag
 ```
 
 For local development, symlink the repo instead:
 
 ```bash
-mkdir -p ~/.skills
-ln -s /path/to/openDAG ~/.skills/opendag
+mkdir -p ~/.codex/skills
+ln -s /path/to/openDAG ~/.codex/skills/opendag
 ```
 
 Start a new agent session after installing so the skill is discovered.
