@@ -1,0 +1,42 @@
+# Functional DAG Conversion Plan
+
+## Existing Project
+
+- Language:
+- Framework:
+- Test command:
+- Typecheck/static validation:
+- Existing contract/schema tools:
+
+## Side-Effect Boundaries
+
+- Filesystem:
+- Network/API:
+- Database:
+- Time/randomness:
+- Framework shell:
+
+## First Conversion Slice
+
+- Workflow:
+- Public interface to preserve:
+- Proposed pure nodes:
+- Shell files:
+- Verification:
+
+## Proposed DAG Nodes
+
+| Node | Purpose | Dependencies | Allowed Files | Status |
+| --- | --- | --- | --- | --- |
+| TODO | TODO | TODO | TODO | planned |
+
+## Risks
+
+- TODO
+
+## Verification Commands
+
+```bash
+TODO
+```
+

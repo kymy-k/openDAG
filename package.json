@@ -1,0 +1,27 @@
+{
+  "name": "functional-codex",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "validate:dag": "tsx tools/validate-dag.ts",
+    "verify:node": "tsx tools/verify-node.ts",
+    "verify:all": "tsx tools/verify-all.ts",
+    "create:node": "tsx tools/create-node.ts",
+    "generate:docs": "tsx tools/generate-node-docs.ts",
+    "check:docs": "tsx tools/generate-node-docs.ts --check",
+    "visualise": "tsx tools/visualise.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.12",
+    "fast-check": "^3.22.0",
+    "tsx": "^4.16.2",
+    "typescript": "^5.5.4",
+    "vitest": "^2.0.4"
+  }
+}

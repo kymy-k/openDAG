@@ -1,0 +1,15 @@
+{
+  "nodes": [
+    {
+      "id": "exampleNode",
+      "kind": "pure",
+      "purpose": "Describe one deterministic responsibility.",
+      "inputSchema": "InputSchema",
+      "outputSchema": "OutputSchema",
+      "dependencies": [],
+      "invariants": ["Pure and deterministic."],
+      "allowedFiles": ["path/to/node/files"],
+      "status": "planned"
+    }
+  ]
+}

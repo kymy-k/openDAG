@@ -1,0 +1,1495 @@
+{
+  "nodes": [
+    {
+      "id": "validateDag.normalizeAllowedFile",
+      "kind": "helper",
+      "purpose": "Convert one allowedFiles path into a normalized repo-relative path, or reject it when it is absolute or escapes the repository.",
+      "inputSchema": "filePath: string",
+      "outputSchema": "normalized repo-relative path string, or null when invalid",
+      "dependencies": [],
+      "invariants": [
+        "Deterministic helper with no filesystem access."
+      ],
+      "allowedFiles": [
+        "src/nodes/validateDag/implementation.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "validateDag.nodeFolders",
+      "kind": "helper",
+      "purpose": "Read one DAG node allowedFiles list and collect the src/nodes/<folder> names that the node claims ownership of.",
+      "inputSchema": "node: DagNode",
+      "outputSchema": "Set of node folder names referenced by allowedFiles",
+      "dependencies": [
+        "validateDag.normalizeAllowedFile"
+      ],
+      "invariants": [
+        "Deterministic helper with no filesystem access."
+      ],
+      "allowedFiles": [
+        "src/nodes/validateDag/implementation.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "validateDag.validateAllowedFiles",
+      "kind": "helper",
+      "purpose": "Check whether one DAG node only lists files that are valid for its kind, keeping pure nodes inside their node folder except specs/contracts references.",
+      "inputSchema": "node: DagNode",
+      "outputSchema": "array of human-readable allowedFiles errors",
+      "dependencies": [
+        "validateDag.nodeFolders",
+        "validateDag.normalizeAllowedFile"
+      ],
+      "invariants": [
+        "Deterministic helper with no filesystem access."
+      ],
+      "allowedFiles": [
+        "src/nodes/validateDag/implementation.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "validateDag.validateAcyclic.visit",
+      "kind": "helper",
+      "purpose": "Visit one node during depth-first cycle detection and record a cycle error when traversal re-enters the active path.",
+      "inputSchema": "node: DagNode and current traversal path stack",
+      "outputSchema": "void; appends cycle errors to local traversal state",
+      "dependencies": [],
+      "invariants": [
+        "Deterministic nested helper that only mutates local traversal sets."
+      ],
+      "allowedFiles": [
+        "src/nodes/validateDag/implementation.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "validateDag.validateAcyclic",
+      "kind": "helper",
+      "purpose": "Detect dependency cycles across the DAG by walking every node dependency chain with depth-first traversal.",
+      "inputSchema": "nodes: DagNode[]",
+      "outputSchema": "array of human-readable cycle errors",
+      "dependencies": [
+        "validateDag.validateAcyclic.visit"
+      ],
+      "invariants": [
+        "Deterministic helper with no filesystem access."
+      ],
+      "allowedFiles": [
+        "src/nodes/validateDag/implementation.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "validateDag",
+      "kind": "pure",
+      "purpose": "Validate an in-memory functional-codex DAG object for schema shape, unique ids, dependency integrity, documentation quality, acyclicity, and allowed file boundaries.",
+      "inputSchema": "{ dag: unknown }",
+      "outputSchema": "{ ok: boolean, errors: string[], dag?: Dag }",
+      "dependencies": [
+        "validateDag.validateAllowedFiles",
+        "validateDag.validateAcyclic",
+        "validateDag.validateNodeDocumentation"
+      ],
+      "invariants": [
+        "The function is pure and deterministic.",
+        "Valid output has ok true and no errors.",
+        "Invalid output has ok false and at least one human-readable error.",
+        "Every dependency must refer to an existing node and the graph must be acyclic.",
+        "Allowed files must remain inside one node folder for pure nodes, with approved shell/template/skill paths for non-pure nodes."
+      ],
+      "allowedFiles": [
+        "src/nodes/validateDag/contract.ts",
+        "src/nodes/validateDag/implementation.ts",
+        "src/nodes/validateDag/tests.test.ts",
+        "specs/dag.json",
+        "specs/user_spec.md",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "planNodeScaffold.render",
+      "kind": "helper",
+      "purpose": "Fill one node scaffold template by replacing every node-name placeholder with the requested node id.",
+      "inputSchema": "template text and nodeName string",
+      "outputSchema": "rendered template text",
+      "dependencies": [],
+      "invariants": [
+        "Deterministic string helper with no filesystem access."
+      ],
+      "allowedFiles": [
+        "src/nodes/planNodeScaffold/implementation.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "planNodeScaffold",
+      "kind": "pure",
+      "purpose": "Plan the three files and rendered file contents needed to scaffold a new TypeScript/Zod DAG node, without writing to the filesystem.",
+      "inputSchema": "{ nodeName: string, contractTemplate: string, implementationTemplate: string, testTemplate: string }",
+      "outputSchema": "{ files: planned file writes[], errors: string[] }",
+      "dependencies": [
+        "planNodeScaffold.render"
+      ],
+      "invariants": [
+        "The function is pure and deterministic.",
+        "Valid node names produce exactly three planned files.",
+        "Invalid node names produce errors and no planned files.",
+        "Rendered files contain the requested node name wherever the template placeholder appears."
+      ],
+      "allowedFiles": [
+        "src/nodes/planNodeScaffold/contract.ts",
+        "src/nodes/planNodeScaffold/implementation.ts",
+        "src/nodes/planNodeScaffold/tests.test.ts",
+        "specs/dag.json",
+        "specs/user_spec.md",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "planNodeVerification",
+      "kind": "pure",
+      "purpose": "Plan the exact commands needed to verify one existing DAG node by checking that the node exists and has a colocated test file.",
+      "inputSchema": "{ dag: Dag, nodeName: string, existingFiles: string[] }",
+      "outputSchema": "{ commands: command plans[], errors: string[] }",
+      "dependencies": [
+        "validateDag"
+      ],
+      "invariants": [
+        "The function is pure and deterministic.",
+        "A missing node produces errors and no commands.",
+        "A node without existing test files produces errors and no commands.",
+        "A valid node produces test and typecheck commands without executing them."
+      ],
+      "allowedFiles": [
+        "src/nodes/planNodeVerification/contract.ts",
+        "src/nodes/planNodeVerification/implementation.ts",
+        "src/nodes/planNodeVerification/tests.test.ts",
+        "specs/dag.json",
+        "specs/user_spec.md",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "buildDagVisualisationModel.depthForNode",
+      "kind": "helper",
+      "purpose": "Calculate the vertical depth for one visual node so command entrypoints appear above the internal nodes they call.",
+      "inputSchema": "node: DagNode, byId: Map<string, DagNode>, dependents: Map<string, string[]>, memo: Map<string, number>",
+      "outputSchema": "depth number where 0 is an entrypoint row",
+      "dependencies": [],
+      "invariants": [
+        "Deterministic helper with only local memoization."
+      ],
+      "allowedFiles": [
+        "src/nodes/buildDagVisualisationModel/implementation.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "buildDagVisualisationModel.routeForNode",
+      "kind": "helper",
+      "purpose": "Assign one DAG node to a visual route so pure core, shell, support, generated, and skill nodes can be styled differently.",
+      "inputSchema": "node: DagNode",
+      "outputSchema": "VisualRoute: main | shell | support | generated | skill",
+      "dependencies": [],
+      "invariants": [
+        "Deterministic helper with no filesystem access."
+      ],
+      "allowedFiles": [
+        "src/nodes/buildDagVisualisationModel/implementation.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "buildDagVisualisationModel.importanceForNode",
+      "kind": "helper",
+      "purpose": "Score one DAG node importance from its kind and number of dependents so major feature nodes render larger than helpers.",
+      "inputSchema": "node: DagNode and dependentCount: number",
+      "outputSchema": "importance integer from 1 to 5",
+      "dependencies": [],
+      "invariants": [
+        "Deterministic helper with no filesystem access."
+      ],
+      "allowedFiles": [
+        "src/nodes/buildDagVisualisationModel/implementation.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "buildDagVisualisationModel.sizeForImportance",
+      "kind": "helper",
+      "purpose": "Convert an importance score into fixed node card dimensions for deterministic graph layout.",
+      "inputSchema": "importance integer from 1 to 5",
+      "outputSchema": "{ width: number, height: number }",
+      "dependencies": [],
+      "invariants": [
+        "Deterministic helper with no filesystem access."
+      ],
+      "allowedFiles": [
+        "src/nodes/buildDagVisualisationModel/implementation.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "buildDagVisualisationModel.routeForEdge",
+      "kind": "helper",
+      "purpose": "Choose the visual route style for one dependency edge based on the routes of its source and target nodes.",
+      "inputSchema": "fromNode: DagNode and toNode: DagNode",
+      "outputSchema": "VisualRoute for the edge",
+      "dependencies": [
+        "buildDagVisualisationModel.routeForNode"
+      ],
+      "invariants": [
+        "Deterministic helper with no filesystem access."
+      ],
+      "allowedFiles": [
+        "src/nodes/buildDagVisualisationModel/implementation.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "buildDagVisualisationModel.overviewVisibleForNode",
+      "kind": "helper",
+      "purpose": "Decide whether one node should be visible in the default compact overview based on command status or high importance.",
+      "inputSchema": "{ id: string, importance: number }",
+      "outputSchema": "boolean indicating overview visibility",
+      "dependencies": [],
+      "invariants": [
+        "Deterministic helper with no filesystem access."
+      ],
+      "allowedFiles": [
+        "src/nodes/buildDagVisualisationModel/implementation.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "buildDagVisualisationModel.overviewRankForNode",
+      "kind": "helper",
+      "purpose": "Assign a stable lane priority to one overview node so the visualise feature route appears before secondary commands.",
+      "inputSchema": "nodeId: string",
+      "outputSchema": "numeric lane priority where lower values render earlier",
+      "dependencies": [],
+      "invariants": [
+        "Deterministic helper with no filesystem access."
+      ],
+      "allowedFiles": [
+        "src/nodes/buildDagVisualisationModel/implementation.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "buildDagVisualisationModel.overviewDepthForNode",
+      "kind": "helper",
+      "purpose": "Calculate compact overview depth for one visible node using only visible overview dependencies and command entrypoint anchors.",
+      "inputSchema": "nodeId: string, visibleDependents: Map<string, string[]>, memo: Map<string, number>",
+      "outputSchema": "overview depth number where 0 is a command row",
+      "dependencies": [],
+      "invariants": [
+        "Deterministic helper with only local memoization."
+      ],
+      "allowedFiles": [
+        "src/nodes/buildDagVisualisationModel/implementation.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "buildDagVisualisationModel",
+      "kind": "pure",
+      "purpose": "Transform a validated DAG into deterministic visual nodes, visual edges, route labels, importance scores, and full/overview coordinates for the interactive graph.",
+      "inputSchema": "{ dag: Dag }",
+      "outputSchema": "{ nodes: VisualNode[], edges: VisualEdge[], counts, dimensions }",
+      "dependencies": [
+        "validateDag",
+        "buildDagVisualisationModel.depthForNode",
+        "buildDagVisualisationModel.routeForNode",
+        "buildDagVisualisationModel.importanceForNode",
+        "buildDagVisualisationModel.sizeForImportance",
+        "buildDagVisualisationModel.routeForEdge",
+        "buildDagVisualisationModel.overviewVisibleForNode",
+        "buildDagVisualisationModel.overviewRankForNode",
+        "buildDagVisualisationModel.overviewDepthForNode"
+      ],
+      "invariants": [
+        "The function is pure and deterministic.",
+        "Every DAG node appears exactly once in the visual model.",
+        "Every dependency is represented as one visual edge from dependent to dependency.",
+        "Node depths place entrypoints above their internal dependencies.",
+        "Layout dimensions keep node cards inside the viewBox.",
+        "Overview coordinates provide a compact default layout for command and pure feature nodes.",
+        "Node kind is preserved for visual styling.",
+        "Pure core route nodes are visually more important than shell, support, generated, and skill routes."
+      ],
+      "allowedFiles": [
+        "src/nodes/buildDagVisualisationModel/contract.ts",
+        "src/nodes/buildDagVisualisationModel/implementation.ts",
+        "src/nodes/buildDagVisualisationModel/tests.test.ts",
+        "specs/dag.json",
+        "specs/user_spec.md",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "renderDagVisualisationHtml.escapeHtml",
+      "kind": "helper",
+      "purpose": "Escape one text string for safe insertion into HTML element text or attribute contexts.",
+      "inputSchema": "value: string",
+      "outputSchema": "HTML-escaped string",
+      "dependencies": [],
+      "invariants": [
+        "Deterministic helper with no filesystem or browser access."
+      ],
+      "allowedFiles": [
+        "src/nodes/renderDagVisualisationHtml/implementation.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "renderDagVisualisationHtml.safeJson",
+      "kind": "helper",
+      "purpose": "Serialize one JSON value for embedding inside the generated HTML script tag without raw less-than characters.",
+      "inputSchema": "value: unknown JSON-serializable data",
+      "outputSchema": "safe JSON string for script payload embedding",
+      "dependencies": [],
+      "invariants": [
+        "Deterministic helper that escapes raw less-than characters."
+      ],
+      "allowedFiles": [
+        "src/nodes/renderDagVisualisationHtml/implementation.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "renderDagVisualisationHtml",
+      "kind": "pure",
+      "purpose": "Render a visual DAG model into a standalone interactive HTML document with search, route filters, overview/full modes, selected-node dependency expansion, details panel, and styled node cards.",
+      "inputSchema": "{ title: string, model: VisualisationModel }",
+      "outputSchema": "{ html: complete standalone HTML document string }",
+      "dependencies": [
+        "buildDagVisualisationModel",
+        "renderDagVisualisationHtml.escapeHtml",
+        "renderDagVisualisationHtml.safeJson"
+      ],
+      "invariants": [
+        "The function is pure and deterministic.",
+        "The output is a complete HTML document.",
+        "The output embeds the model data without raw less-than characters inside the JSON script payload.",
+        "The rendered page includes interactive search, overview/full mode, route filtering, status filtering, and node selection controls.",
+        "Node labels are clipped inside fixed-size cards instead of overflowing.",
+        "Non-pure node kinds have distinct visual styling.",
+        "Route and importance metadata are visible through labels, edge styles, and node size.",
+        "Selecting a node in overview mode reveals its hidden dependency chain without switching to the full graph."
+      ],
+      "allowedFiles": [
+        "src/nodes/renderDagVisualisationHtml/contract.ts",
+        "src/nodes/renderDagVisualisationHtml/implementation.ts",
+        "src/nodes/renderDagVisualisationHtml/tests.test.ts",
+        "specs/dag.json",
+        "specs/user_spec.md",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "visualClient.escapeText",
+      "kind": "template",
+      "purpose": "Escape one browser runtime value before inserting it into generated visualisation DOM strings.",
+      "inputSchema": "value: unknown",
+      "outputSchema": "escaped display string",
+      "dependencies": [
+        "renderDagVisualisationHtml"
+      ],
+      "invariants": [
+        "Template function is deterministic in the generated browser runtime."
+      ],
+      "allowedFiles": [
+        "src/nodes/renderDagVisualisationHtml/implementation.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "visualClient.nodeById",
+      "kind": "template",
+      "purpose": "Look up one visual node from the embedded browser model by its DAG node id.",
+      "inputSchema": "id: string",
+      "outputSchema": "VisualNode when found, otherwise undefined",
+      "dependencies": [
+        "renderDagVisualisationHtml"
+      ],
+      "invariants": [
+        "Template function is deterministic for a fixed embedded model."
+      ],
+      "allowedFiles": [
+        "src/nodes/renderDagVisualisationHtml/implementation.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "visualClient.statusStyle",
+      "kind": "template",
+      "purpose": "Build CSS variable declarations for one node status, kind, and route so the generated card receives the correct colours.",
+      "inputSchema": "node: VisualNode",
+      "outputSchema": "CSS variable declaration string",
+      "dependencies": [
+        "visualClient.nodeById"
+      ],
+      "invariants": [
+        "Template function is deterministic for a fixed node."
+      ],
+      "allowedFiles": [
+        "src/nodes/renderDagVisualisationHtml/implementation.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "visualClient.importanceMeter",
+      "kind": "template",
+      "purpose": "Render the five-step importance meter markup for one visual node in the details panel.",
+      "inputSchema": "node: VisualNode",
+      "outputSchema": "HTML string for the importance meter",
+      "dependencies": [],
+      "invariants": [
+        "Template function is deterministic for a fixed node."
+      ],
+      "allowedFiles": [
+        "src/nodes/renderDagVisualisationHtml/implementation.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "visualClient.isVisible",
+      "kind": "template",
+      "purpose": "Decide whether one node should currently be displayed after applying filters, overview/full mode, current selection, and selected-node dependency expansion.",
+      "inputSchema": "node: VisualNode plus current DOM filter, view mode, and selection state",
+      "outputSchema": "boolean indicating whether to show the node",
+      "dependencies": [
+        "visualClient.nodeById",
+        "visualClient.expandedDependencyIds",
+        "visualClient.isOverviewPromoted"
+      ],
+      "invariants": [
+        "Template function is deterministic for fixed DOM control values and node data."
+      ],
+      "allowedFiles": [
+        "src/nodes/renderDagVisualisationHtml/implementation.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "visualClient.listSection",
+      "kind": "template",
+      "purpose": "Render one titled details-panel list, including an explicit None state when the list has no items.",
+      "inputSchema": "title: string and items: string[]",
+      "outputSchema": "HTML string for one details section",
+      "dependencies": [
+        "visualClient.escapeText"
+      ],
+      "invariants": [
+        "Template function is deterministic for fixed inputs."
+      ],
+      "allowedFiles": [
+        "src/nodes/renderDagVisualisationHtml/implementation.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "visualClient.renderDetails",
+      "kind": "template",
+      "purpose": "Render the selected node details panel with route, kind, status, input, output, dependencies, dependents, invariants, and allowed files.",
+      "inputSchema": "node: VisualNode",
+      "outputSchema": "void; replaces the generated details panel DOM",
+      "dependencies": [
+        "visualClient.escapeText",
+        "visualClient.listSection",
+        "visualClient.importanceMeter"
+      ],
+      "invariants": [
+        "Template function only mutates the generated details panel."
+      ],
+      "allowedFiles": [
+        "src/nodes/renderDagVisualisationHtml/implementation.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "visualClient.connectedToSelected",
+      "kind": "template",
+      "purpose": "Determine whether one edge is connected to the currently selected node so it can be highlighted.",
+      "inputSchema": "edge dataset with from and to node ids plus selectedId state",
+      "outputSchema": "boolean indicating selected-edge connection",
+      "dependencies": [],
+      "invariants": [
+        "Template function is deterministic for selectedId and edge data."
+      ],
+      "allowedFiles": [
+        "src/nodes/renderDagVisualisationHtml/implementation.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "visualClient.updateState",
+      "kind": "template",
+      "purpose": "Apply current dimensions, positions, edge paths, visibility, selection, and highlight CSS classes to the rendered SVG graph.",
+      "inputSchema": "current generated graph DOM and filter, view mode, position, and selection state",
+      "outputSchema": "void; mutates SVG attributes and CSS classes in the generated visualisation only",
+      "dependencies": [
+        "visualClient.nodeById",
+        "visualClient.isVisible",
+        "visualClient.connectedToSelected",
+        "visualClient.graphDimensions",
+        "visualClient.positionForNode",
+        "visualClient.edgePath"
+      ],
+      "invariants": [
+        "Template function only mutates generated graph CSS classes."
+      ],
+      "allowedFiles": [
+        "src/nodes/renderDagVisualisationHtml/implementation.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "visualClient.selectNode",
+      "kind": "template",
+      "purpose": "Set the selected node id, render details, and refresh graph visibility so hidden dependencies appear in a clickable top focus band.",
+      "inputSchema": "id: string for the clicked visual node",
+      "outputSchema": "void; updates generated visualisation selection and focus-band state",
+      "dependencies": [
+        "visualClient.nodeById",
+        "visualClient.renderDetails",
+        "visualClient.updateState"
+      ],
+      "invariants": [
+        "Template function only mutates generated visualisation selection state."
+      ],
+      "allowedFiles": [
+        "src/nodes/renderDagVisualisationHtml/implementation.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "visualClient.positionForNode",
+      "kind": "template",
+      "purpose": "Select the correct coordinates for one node from the top focus band, shifted compact overview layout, or full graph layout.",
+      "inputSchema": "node: VisualNode plus current view mode and expansion state",
+      "outputSchema": "{ x: number, y: number }",
+      "dependencies": [
+        "visualClient.expandedDependencyPosition",
+        "visualClient.expandedBandHeight"
+      ],
+      "invariants": [
+        "Template function is deterministic for the current view mode and node coordinates."
+      ],
+      "allowedFiles": [
+        "src/nodes/renderDagVisualisationHtml/implementation.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "visualClient.edgePath",
+      "kind": "template",
+      "purpose": "Compute the SVG cubic Bezier path for one dependency edge between two positioned visual nodes.",
+      "inputSchema": "fromNode: VisualNode and toNode: VisualNode",
+      "outputSchema": "SVG path data string",
+      "dependencies": [
+        "buildDagVisualisationModel",
+        "visualClient.positionForNode"
+      ],
+      "invariants": [
+        "Template function is deterministic for fixed model dimensions and node positions."
+      ],
+      "allowedFiles": [
+        "src/nodes/renderDagVisualisationHtml/implementation.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "visualClient.renderNode",
+      "kind": "template",
+      "purpose": "Create one interactive SVG group containing the node card foreignObject plus direct card and keyboard selection handlers.",
+      "inputSchema": "node: VisualNode",
+      "outputSchema": "SVGGElement for the rendered node",
+      "dependencies": [
+        "visualClient.escapeText",
+        "visualClient.statusStyle",
+        "visualClient.selectNode",
+        "visualClient.positionForNode"
+      ],
+      "invariants": [
+        "Template function creates DOM for the generated visualisation only.",
+        "Template function attaches click handling directly to generated cards so dynamically revealed nodes remain selectable."
+      ],
+      "allowedFiles": [
+        "src/nodes/renderDagVisualisationHtml/implementation.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "visualClient.renderGraph",
+      "kind": "template",
+      "purpose": "Render the full SVG graph for the current view mode by drawing markers, edges, nodes, and initial visibility state.",
+      "inputSchema": "embedded visualisation model and current view mode",
+      "outputSchema": "void; replaces the generated SVG graph DOM",
+      "dependencies": [
+        "visualClient.nodeById",
+        "visualClient.edgePath",
+        "visualClient.renderNode",
+        "visualClient.updateState",
+        "visualClient.graphDimensions"
+      ],
+      "invariants": [
+        "Template function only mutates the generated SVG graph."
+      ],
+      "allowedFiles": [
+        "src/nodes/renderDagVisualisationHtml/implementation.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "normalizeText",
+      "kind": "pure",
+      "purpose": "Normalize user-provided text by trimming outer whitespace and replacing every internal whitespace run with one plain space.",
+      "inputSchema": "{ text: string }",
+      "outputSchema": "{ normalized: string }",
+      "dependencies": [],
+      "invariants": [
+        "The function is pure and deterministic.",
+        "The output normalized string has no leading or trailing whitespace.",
+        "Every non-empty whitespace run in the input becomes a single space in the output.",
+        "Normal words are preserved in their original order."
+      ],
+      "allowedFiles": [
+        "src/nodes/exampleNode/contract.ts",
+        "src/nodes/exampleNode/implementation.ts",
+        "src/nodes/exampleNode/tests.test.ts",
+        "specs/dag.json",
+        "specs/user_spec.md",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "tools.validateDag.readDag",
+      "kind": "imperative",
+      "purpose": "Read specs/dag.json or an explicit DAG path from disk and parse it as JSON for the validation shell.",
+      "inputSchema": "dagPath?: string",
+      "outputSchema": "parsed JSON value from the DAG file",
+      "dependencies": [],
+      "invariants": [
+        "Imperative shell function may read the filesystem."
+      ],
+      "allowedFiles": [
+        "tools/validate-dag.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "tools.validateDag.validateDag",
+      "kind": "imperative",
+      "purpose": "Bridge filesystem DAG loading into the pure validateDag node and return the validation result to CLI callers.",
+      "inputSchema": "dagPath?: string",
+      "outputSchema": "ValidationResult with ok, errors, and parsed DAG when valid",
+      "dependencies": [
+        "tools.validateDag.readDag",
+        "validateDag"
+      ],
+      "invariants": [
+        "Imperative shell boundary delegates validation to the pure DAG node."
+      ],
+      "allowedFiles": [
+        "tools/validate-dag.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "tools.validateDag.main",
+      "kind": "imperative",
+      "purpose": "Run the validate:dag CLI command by validating the repo DAG, printing errors or success, and setting process exit status.",
+      "inputSchema": "process argv for npm run validate:dag",
+      "outputSchema": "process output and exit code",
+      "dependencies": [
+        "tools.validateDag.validateDag"
+      ],
+      "invariants": [
+        "Imperative shell function may write console output and exit the process."
+      ],
+      "allowedFiles": [
+        "tools/validate-dag.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "tools.createNode.usage",
+      "kind": "imperative",
+      "purpose": "Print create-node command usage and terminate the process when the caller did not provide a node name.",
+      "inputSchema": "none",
+      "outputSchema": "never; exits the process after console output",
+      "dependencies": [],
+      "invariants": [
+        "Imperative shell helper may write console output and exit the process."
+      ],
+      "allowedFiles": [
+        "tools/create-node.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "tools.createNode.readTemplate",
+      "kind": "imperative",
+      "purpose": "Read one scaffold template file from the templates directory for the create-node shell.",
+      "inputSchema": "templateName: string",
+      "outputSchema": "template file contents string",
+      "dependencies": [],
+      "invariants": [
+        "Imperative shell helper may read template files."
+      ],
+      "allowedFiles": [
+        "tools/create-node.ts",
+        "templates/node.contract.template.ts",
+        "templates/node.implementation.template.ts",
+        "templates/node.test.template.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "tools.verifyNode.usage",
+      "kind": "imperative",
+      "purpose": "Print verify-node command usage and terminate the process when the caller did not provide a node name.",
+      "inputSchema": "none",
+      "outputSchema": "never; exits the process after console output",
+      "dependencies": [],
+      "invariants": [
+        "Imperative shell helper may write console output and exit the process."
+      ],
+      "allowedFiles": [
+        "tools/verify-node.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "tools.verifyNode.runCommand",
+      "kind": "imperative",
+      "purpose": "Run one subprocess command needed for node verification with inherited stdio from the current terminal.",
+      "inputSchema": "command: string and args: string[]",
+      "outputSchema": "void when the subprocess succeeds, otherwise throws/exits",
+      "dependencies": [],
+      "invariants": [
+        "Imperative shell helper may spawn child processes."
+      ],
+      "allowedFiles": [
+        "tools/verify-node.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "tools.verifyAll.runCommand",
+      "kind": "imperative",
+      "purpose": "Run one full-project verification subprocess with inherited stdio from the current terminal.",
+      "inputSchema": "command: string and args: string[]",
+      "outputSchema": "void when the subprocess succeeds, otherwise throws/exits",
+      "dependencies": [],
+      "invariants": [
+        "Imperative shell helper may spawn child processes."
+      ],
+      "allowedFiles": [
+        "tools/verify-all.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "tools.visualise.openFile",
+      "kind": "imperative",
+      "purpose": "Open the generated DAG visualisation HTML file through the operating system default browser command.",
+      "inputSchema": "filePath: string",
+      "outputSchema": "void after dispatching the OS open command",
+      "dependencies": [],
+      "invariants": [
+        "Imperative shell helper may spawn OS file-opening commands."
+      ],
+      "allowedFiles": [
+        "tools/visualise.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "command.validateDag",
+      "kind": "imperative",
+      "purpose": "Expose npm run validate:dag as the command entrypoint that validates specs/dag.json and reports contract violations.",
+      "inputSchema": "process argv from npm run validate:dag",
+      "outputSchema": "terminal validation report and process exit code",
+      "dependencies": [
+        "tools.validateDag.main"
+      ],
+      "invariants": [
+        "Top-level command entrypoint may perform process IO through shell functions only."
+      ],
+      "allowedFiles": [
+        "package.json",
+        "tools/validate-dag.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "command.createNode",
+      "kind": "imperative",
+      "purpose": "Expose npm run create:node as the command entrypoint that plans and writes a new node contract, implementation, and test scaffold.",
+      "inputSchema": "process argv containing nodeName",
+      "outputSchema": "created node scaffold files or terminal errors",
+      "dependencies": [
+        "tools.createNode.usage",
+        "tools.createNode.readTemplate",
+        "planNodeScaffold"
+      ],
+      "invariants": [
+        "Top-level command entrypoint may write files only through the shell after pure scaffold planning."
+      ],
+      "allowedFiles": [
+        "package.json",
+        "tools/create-node.ts",
+        "templates/node.contract.template.ts",
+        "templates/node.implementation.template.ts",
+        "templates/node.test.template.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "command.verifyNode",
+      "kind": "imperative",
+      "purpose": "Expose npm run verify:node as the command entrypoint that validates the DAG and runs tests/typecheck for one named node.",
+      "inputSchema": "process argv containing nodeName",
+      "outputSchema": "terminal verification report and process exit code",
+      "dependencies": [
+        "tools.verifyNode.usage",
+        "tools.verifyNode.runCommand",
+        "tools.validateDag.validateDag",
+        "planNodeVerification"
+      ],
+      "invariants": [
+        "Top-level command entrypoint may read files and run verification subprocesses through shell functions only."
+      ],
+      "allowedFiles": [
+        "package.json",
+        "tools/verify-node.ts",
+        "tools/validate-dag.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "command.verifyAll",
+      "kind": "imperative",
+      "purpose": "Expose npm run verify:all as the command entrypoint that validates the DAG, checks generated docs, runs all tests, and typechecks the repo.",
+      "inputSchema": "process argv from npm run verify:all",
+      "outputSchema": "full-project verification report and process exit code",
+      "dependencies": [
+        "tools.verifyAll.runCommand",
+        "tools.validateDag.validateDag",
+        "tools.generateNodeDocs.main"
+      ],
+      "invariants": [
+        "Top-level command entrypoint may run full-project verification through shell functions only."
+      ],
+      "allowedFiles": [
+        "package.json",
+        "tools/verify-all.ts",
+        "tools/generate-node-docs.ts",
+        "tools/validate-dag.ts",
+        "specs/node_catalog.md",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "command.visualise",
+      "kind": "imperative",
+      "purpose": "Expose npm run visualise as the command entrypoint that validates the DAG, builds the visual model, renders HTML, writes it to disk, and optionally opens it.",
+      "inputSchema": "process argv with optional --no-open flag",
+      "outputSchema": "generated HTML file path and optional browser open side effect",
+      "dependencies": [
+        "tools.visualise.openFile",
+        "tools.validateDag.validateDag",
+        "buildDagVisualisationModel",
+        "renderDagVisualisationHtml"
+      ],
+      "invariants": [
+        "Top-level command entrypoint may write/open files only after pure visual model and HTML rendering."
+      ],
+      "allowedFiles": [
+        "package.json",
+        "tools/visualise.ts",
+        "tools/validate-dag.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "skill.checkDagJson.visit",
+      "kind": "skill",
+      "purpose": "Walk one node inside the skill bundled DAG checker script and report cycles in a lightweight skill-installation context.",
+      "inputSchema": "node id and active traversal stack",
+      "outputSchema": "void; mutates local script traversal state",
+      "dependencies": [],
+      "invariants": [
+        "Skill helper mutates only local script traversal state."
+      ],
+      "allowedFiles": [
+        "functional-dag-agent-skill/scripts/check-dag-json.mjs",
+        "functional-dag-agent-skill/SKILL.md",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "skill.repoScan.walk",
+      "kind": "skill",
+      "purpose": "Walk a repository directory for the converter skill while ignoring dependency, build, cache, and VCS folders.",
+      "inputSchema": "dir: string and limit: number",
+      "outputSchema": "string[] of discovered repo-relative paths",
+      "dependencies": [],
+      "invariants": [
+        "Skill helper is intentionally imperative because it scans the filesystem."
+      ],
+      "allowedFiles": [
+        "functional-dag-repo-converter-skill/scripts/repo-scan.mjs",
+        "functional-dag-repo-converter-skill/SKILL.md",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "template.nodeImplementation.run",
+      "kind": "template",
+      "purpose": "Define the placeholder pure run function shape used when create-node generates a new node implementation file.",
+      "inputSchema": "Input type from the generated node contract",
+      "outputSchema": "Output type from the generated node contract",
+      "dependencies": [],
+      "invariants": [
+        "Template function describes the contract-first node shape."
+      ],
+      "allowedFiles": [
+        "templates/node.implementation.template.ts",
+        "templates/node.contract.template.ts",
+        "templates/node.test.template.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "template.skillTypescriptZodNode.run",
+      "kind": "template",
+      "purpose": "Define the placeholder TypeScript/Zod run function shape distributed inside the reusable functional DAG agent skill.",
+      "inputSchema": "Input type from the skill node contract template",
+      "outputSchema": "Output type from the skill node contract template",
+      "dependencies": [],
+      "invariants": [
+        "Template function describes the reusable contract-first node shape."
+      ],
+      "allowedFiles": [
+        "functional-dag-agent-skill/templates/typescript-zod-node.implementation.template.ts",
+        "functional-dag-agent-skill/templates/typescript-zod-node.contract.template.ts",
+        "functional-dag-agent-skill/templates/typescript-zod-node.test.template.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "skill.functionalDagAgentSkill",
+      "kind": "skill",
+      "purpose": "Package reusable Codex instructions, templates, and helper scripts for applying the functional DAG workflow while implementing coding tasks.",
+      "inputSchema": "Codex task context for a repo that may or may not already use functional-codex",
+      "outputSchema": "workflow guidance, templates, and helper scripts for DAG-based implementation",
+      "dependencies": [
+        "skill.checkDagJson.visit",
+        "template.skillTypescriptZodNode.run"
+      ],
+      "invariants": [
+        "Skill artifact is tracked in the DAG as a reusable workflow component."
+      ],
+      "allowedFiles": [
+        "functional-dag-agent-skill/SKILL.md",
+        "functional-dag-agent-skill/scripts/check-dag-json.mjs",
+        "functional-dag-agent-skill/scripts/scaffold-ts-zod-node.mjs",
+        "functional-dag-agent-skill/templates/dag-node.md",
+        "functional-dag-agent-skill/templates/typescript-zod-node.contract.template.ts",
+        "functional-dag-agent-skill/templates/typescript-zod-node.implementation.template.ts",
+        "functional-dag-agent-skill/templates/typescript-zod-node.test.template.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "skill.functionalDagRepoConverterSkill",
+      "kind": "skill",
+      "purpose": "Package reusable Codex instructions, templates, and helper scripts for converting an existing repository toward contract-first functional DAG architecture.",
+      "inputSchema": "existing repository source tree and conversion goal",
+      "outputSchema": "conversion workflow, starter DAG template, AGENTS template, and repo scan helper",
+      "dependencies": [
+        "skill.repoScan.walk"
+      ],
+      "invariants": [
+        "Skill artifact is tracked in the DAG as a reusable conversion component."
+      ],
+      "allowedFiles": [
+        "functional-dag-repo-converter-skill/SKILL.md",
+        "functional-dag-repo-converter-skill/scripts/repo-scan.mjs",
+        "functional-dag-repo-converter-skill/templates/AGENTS.md.template",
+        "functional-dag-repo-converter-skill/templates/dag.json.template",
+        "functional-dag-repo-converter-skill/templates/conversion-plan.md.template",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "validateDag.validateNodeDocumentation",
+      "kind": "helper",
+      "purpose": "Check one DAG node documentation fields for placeholder text and a clear enough purpose before validation succeeds.",
+      "inputSchema": "node: DagNode",
+      "outputSchema": "array of human-readable documentation errors",
+      "dependencies": [],
+      "invariants": [
+        "Deterministic helper with no filesystem access."
+      ],
+      "allowedFiles": [
+        "src/nodes/validateDag/implementation.ts",
+        "src/nodes/validateDag/tests.test.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "buildNodeCatalog.escapeMarkdown",
+      "kind": "helper",
+      "purpose": "Escape one text value so generated Markdown table/list content cannot break pipe-delimited formatting.",
+      "inputSchema": "value: string",
+      "outputSchema": "Markdown-safe string",
+      "dependencies": [],
+      "invariants": [
+        "Deterministic helper with no filesystem access."
+      ],
+      "allowedFiles": [
+        "src/nodes/buildNodeCatalog/implementation.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "buildNodeCatalog.formatList",
+      "kind": "helper",
+      "purpose": "Render one string list for the node catalog, using inline code entries or an explicit None marker for empty lists.",
+      "inputSchema": "items: string[]",
+      "outputSchema": "Markdown inline list string",
+      "dependencies": [
+        "buildNodeCatalog.escapeMarkdown"
+      ],
+      "invariants": [
+        "Deterministic helper with no filesystem access."
+      ],
+      "allowedFiles": [
+        "src/nodes/buildNodeCatalog/implementation.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "buildNodeCatalog.describeNode",
+      "kind": "helper",
+      "purpose": "Render one DAG node into a Markdown section stating what it does, input it expects, output it gives, dependencies, invariants, and allowed files.",
+      "inputSchema": "node: DagNode",
+      "outputSchema": "Markdown section string",
+      "dependencies": [
+        "buildNodeCatalog.escapeMarkdown",
+        "buildNodeCatalog.formatList"
+      ],
+      "invariants": [
+        "Deterministic helper with no filesystem access."
+      ],
+      "allowedFiles": [
+        "src/nodes/buildNodeCatalog/implementation.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "buildNodeCatalog",
+      "kind": "pure",
+      "purpose": "Generate the complete Markdown node catalog from the DAG so every node has maintained documentation for behavior, expected input, and produced output.",
+      "inputSchema": "{ dag: Dag, title?: string }",
+      "outputSchema": "{ markdown: string }",
+      "dependencies": [
+        "validateDag",
+        "buildNodeCatalog.describeNode"
+      ],
+      "invariants": [
+        "The function is pure and deterministic.",
+        "Every DAG node appears exactly once in the generated catalog.",
+        "Every node section states what the node does, the input it expects, and the output it gives.",
+        "Node sections are sorted by node id for stable diffs."
+      ],
+      "allowedFiles": [
+        "src/nodes/buildNodeCatalog/contract.ts",
+        "src/nodes/buildNodeCatalog/implementation.ts",
+        "src/nodes/buildNodeCatalog/tests.test.ts",
+        "specs/dag.json",
+        "specs/user_spec.md",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "tools.generateNodeDocs.catalogPath",
+      "kind": "imperative",
+      "purpose": "Resolve the repository output path for the generated node catalog markdown file.",
+      "inputSchema": "current working directory",
+      "outputSchema": "absolute path to specs/node_catalog.md",
+      "dependencies": [],
+      "invariants": [
+        "Imperative shell helper only reads process cwd."
+      ],
+      "allowedFiles": [
+        "tools/generate-node-docs.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "tools.generateNodeDocs.generatedCatalog",
+      "kind": "imperative",
+      "purpose": "Validate the DAG through the shell loader and build the generated node catalog markdown from the parsed DAG.",
+      "inputSchema": "current repository specs/dag.json",
+      "outputSchema": "generated Markdown catalog string",
+      "dependencies": [
+        "tools.validateDag.validateDag",
+        "buildNodeCatalog"
+      ],
+      "invariants": [
+        "Imperative shell helper reads DAG only through the existing validation boundary."
+      ],
+      "allowedFiles": [
+        "tools/generate-node-docs.ts",
+        "tools/validate-dag.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "tools.generateNodeDocs.isCatalogCurrent",
+      "kind": "imperative",
+      "purpose": "Compare the expected generated catalog with the existing file on disk and report whether they are identical.",
+      "inputSchema": "expected markdown string and outputPath string",
+      "outputSchema": "boolean freshness result",
+      "dependencies": [],
+      "invariants": [
+        "Imperative shell helper only reads the generated catalog file."
+      ],
+      "allowedFiles": [
+        "tools/generate-node-docs.ts",
+        "specs/node_catalog.md",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "tools.generateNodeDocs.main",
+      "kind": "imperative",
+      "purpose": "Run the generate-node-docs CLI by generating catalog markdown, checking freshness with --check, or writing specs/node_catalog.md.",
+      "inputSchema": "process argv with optional --check flag",
+      "outputSchema": "terminal report, generated file write, and process exit code",
+      "dependencies": [
+        "tools.generateNodeDocs.catalogPath",
+        "tools.generateNodeDocs.generatedCatalog",
+        "tools.generateNodeDocs.isCatalogCurrent"
+      ],
+      "invariants": [
+        "Imperative shell helper writes only the generated node catalog file."
+      ],
+      "allowedFiles": [
+        "tools/generate-node-docs.ts",
+        "specs/node_catalog.md",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "command.generateDocs",
+      "kind": "imperative",
+      "purpose": "Expose npm run generate:docs as the command entrypoint that regenerates specs/node_catalog.md from specs/dag.json.",
+      "inputSchema": "process argv from npm run generate:docs",
+      "outputSchema": "updated specs/node_catalog.md and terminal report",
+      "dependencies": [
+        "tools.generateNodeDocs.main"
+      ],
+      "invariants": [
+        "Top-level command entrypoint may write only generated documentation after DAG validation succeeds."
+      ],
+      "allowedFiles": [
+        "package.json",
+        "tools/generate-node-docs.ts",
+        "specs/node_catalog.md",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "command.checkDocs",
+      "kind": "imperative",
+      "purpose": "Expose npm run check:docs as the command entrypoint that fails when specs/node_catalog.md is stale relative to specs/dag.json.",
+      "inputSchema": "process argv from npm run check:docs",
+      "outputSchema": "freshness report and process exit code",
+      "dependencies": [
+        "tools.generateNodeDocs.main"
+      ],
+      "invariants": [
+        "Top-level command entrypoint only compares generated documentation and does not mutate files."
+      ],
+      "allowedFiles": [
+        "package.json",
+        "tools/generate-node-docs.ts",
+        "specs/node_catalog.md",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "visualClient.dependencyIdsForNode",
+      "kind": "template",
+      "purpose": "Collect the transitive dependency ids for one selected visual node in the generated browser graph.",
+      "inputSchema": "id: string and optional visited Set<string>",
+      "outputSchema": "Set<string> of dependency node ids reachable from the selected node",
+      "dependencies": [
+        "visualClient.nodeById"
+      ],
+      "invariants": [
+        "Template function is deterministic for a fixed embedded model and selected node id."
+      ],
+      "allowedFiles": [
+        "src/nodes/renderDagVisualisationHtml/implementation.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "visualClient.expandedDependencyIds",
+      "kind": "template",
+      "purpose": "Return the dependency ids that should be force-visible for the currently selected node in overview mode.",
+      "inputSchema": "selectedId state and current view mode",
+      "outputSchema": "Set<string> of dependency ids to reveal in overview mode",
+      "dependencies": [
+        "visualClient.dependencyIdsForNode"
+      ],
+      "invariants": [
+        "Template function returns an empty set outside overview mode or when no node is selected."
+      ],
+      "allowedFiles": [
+        "src/nodes/renderDagVisualisationHtml/implementation.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "visualClient.isOverviewPromoted",
+      "kind": "template",
+      "purpose": "Decide whether one visual node belongs to the default overview before any selected-node dependency expansion.",
+      "inputSchema": "node: VisualNode",
+      "outputSchema": "boolean indicating default overview visibility",
+      "dependencies": [],
+      "invariants": [
+        "Template function is deterministic for a fixed visual node."
+      ],
+      "allowedFiles": [
+        "src/nodes/renderDagVisualisationHtml/implementation.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "visualClient.expandedDependencyList",
+      "kind": "template",
+      "purpose": "Build the sorted local focus list containing the selected hidden node and its hidden dependencies that are not already visible in compact overview.",
+      "inputSchema": "selectedId state, current view mode, and embedded visualisation model",
+      "outputSchema": "VisualNode[] for the local focus expansion layout",
+      "dependencies": [
+        "visualClient.expandedDependencyIds",
+        "visualClient.nodeById",
+        "visualClient.isOverviewPromoted"
+      ],
+      "invariants": [
+        "Template function keeps the selected hidden node first and sorts remaining dependency nodes by id for stable placement."
+      ],
+      "allowedFiles": [
+        "src/nodes/renderDagVisualisationHtml/implementation.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "visualClient.expandedDependencyPosition",
+      "kind": "template",
+      "purpose": "Assign one selected hidden node or force-visible hidden dependency a stable position inside the top focus band.",
+      "inputSchema": "node: VisualNode plus selected-node dependency expansion state",
+      "outputSchema": "{ x: number, y: number } when part of the focus band, otherwise null",
+      "dependencies": [
+        "visualClient.expandedDependencyList",
+        "visualClient.isOverviewPromoted"
+      ],
+      "invariants": [
+        "Template function places focus-band nodes in stable rows above the shifted overview graph."
+      ],
+      "allowedFiles": [
+        "src/nodes/renderDagVisualisationHtml/implementation.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "visualClient.graphDimensions",
+      "kind": "template",
+      "purpose": "Compute the SVG dimensions for the current view mode, reserving top space for local selected-node dependency expansion.",
+      "inputSchema": "current view mode, embedded model dimensions, and selected dependency expansion state",
+      "outputSchema": "{ width: number, height: number } for the SVG viewBox",
+      "dependencies": [
+        "visualClient.expandedDependencyList",
+        "visualClient.expandedDependencyPosition",
+        "visualClient.expandedBandHeight"
+      ],
+      "invariants": [
+        "Template function keeps focus-band dependency nodes and shifted overview nodes inside the generated SVG viewBox."
+      ],
+      "allowedFiles": [
+        "src/nodes/renderDagVisualisationHtml/implementation.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "visualClient.expandedBandHeight",
+      "kind": "template",
+      "purpose": "Compute the reserved top focus-band height needed to show selected hidden nodes and dependencies without overlapping the overview graph.",
+      "inputSchema": "selected-node expansion list in overview mode",
+      "outputSchema": "height in SVG units to reserve above the overview graph",
+      "dependencies": [
+        "visualClient.expandedDependencyList"
+      ],
+      "invariants": [
+        "Template function returns zero when no hidden dependency focus band is needed."
+      ],
+      "allowedFiles": [
+        "src/nodes/renderDagVisualisationHtml/implementation.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    }
+  ]
+}

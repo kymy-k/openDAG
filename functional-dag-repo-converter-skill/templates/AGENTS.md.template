@@ -1,0 +1,17 @@
+# AGENTS.md
+
+This repository uses a contract-first functional DAG workflow.
+
+## Rules
+
+1. Read the DAG/spec files before editing.
+2. Do not implement before a contract and tests exist.
+3. Keep DAG nodes pure and deterministic.
+4. Keep filesystem, network, database, time, randomness, process environment, and hidden global state outside pure nodes.
+5. Do not change public interfaces unless explicitly requested.
+6. Do not edit outside the assigned node or conversion slice unless the user asks.
+7. Do not weaken tests to pass.
+8. If a contract is impossible or underspecified, propose a contract change instead of silently modifying it.
+9. Run node-level and full verification before finishing.
+10. Explain what changed and how it was verified.
+
