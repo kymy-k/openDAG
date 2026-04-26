@@ -8,14 +8,16 @@
       "outputSchema": "OutputSchema",
       "dependencies": [],
       "invariants": ["Pure and deterministic."],
-      "allowedFiles": ["path/to/node/files"],
+      "allowedFiles": ["path/to/node/files", "tests/exampleNode.test.ts"],
       "status": "planned"
     }
   ],
   "conversionCriteria": {
     "goal": "Every repo-owned named function is represented in the DAG with explicit contracts, invariants, dependencies, allowed files, and verification.",
+    "scope": "full repository, or explicit user-requested paths passed to repo-scan with --scope",
     "completeWhen": [
-      "repo-scan --fail-on-uncovered exits successfully or every remaining exclusion is documented",
+      "repo-scan --fail-on-uncovered --fail-on-missing-tests exits successfully for the requested scope or every remaining exclusion is documented",
+      "every in-scope DAG node has a separate tests/ file derived from its spec",
       "all effectful functions are marked imperative",
       "generated node docs are current",
       "DAG validation passes",

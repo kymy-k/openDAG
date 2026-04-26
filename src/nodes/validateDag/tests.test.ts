@@ -71,7 +71,28 @@ describe("validateDag", () => {
     expect(result.errors.some((error) => error.startsWith("cycle detected:"))).toBe(true);
   });
 
-  it("rejects allowed files outside the node folder or specs/contracts references", () => {
+  it("allows separate tests files outside the node folder", () => {
+    const result = run({
+      dag: {
+        nodes: [
+          {
+            ...baseNode,
+            allowedFiles: [
+              "src/nodes/nodeA/contract.ts",
+              "src/nodes/nodeA/implementation.ts",
+              "tests/nodeA.test.ts",
+              "specs/dag.json",
+              "contracts/contractTypes.ts"
+            ]
+          }
+        ]
+      }
+    });
+
+    expect(result.ok).toBe(true);
+  });
+
+  it("rejects allowed files outside the node folder or specs/contracts/tests references", () => {
     const result = run({
       dag: {
         nodes: [
@@ -85,7 +106,7 @@ describe("validateDag", () => {
 
     expect(result.ok).toBe(false);
     expect(result.errors).toContain(
-      'nodeA: allowedFile "tools/validate-dag.ts" must be inside the node folder or be a specs/contracts reference'
+      'nodeA: allowedFile "tools/validate-dag.ts" must be inside the node folder or be a specs/contracts/tests reference'
     );
   });
 

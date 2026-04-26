@@ -19,6 +19,7 @@
 ## First Conversion Slice
 
 - Workflow:
+- Scope paths:
 - Public interface to preserve:
 - Proposed pure nodes:
 - Shell files:
@@ -30,11 +31,18 @@
 | --- | --- | --- | --- | --- |
 | TODO | TODO | TODO | TODO | planned |
 
+## Node Tests
+
+| Node | Test File | Cases From Spec | Status |
+| --- | --- | --- | --- |
+| TODO | tests/TODO.test.ext | happy path, invalid input, invariants, dependency fakes | planned |
+
 ## Goal-Driven Completion Criteria
 
 - [ ] Scanner has been run.
-- [ ] `repo-scan --fail-on-uncovered` exits successfully, except documented generated/vendor exclusions.
+- [ ] `repo-scan --fail-on-uncovered --fail-on-missing-tests` exits successfully for the requested scope, except documented generated/vendor exclusions.
 - [ ] Every repo-owned named function is represented in `specs/dag.json`.
+- [ ] Every in-scope DAG node has a separate test file under `tests/`.
 - [ ] Every effectful function is marked `imperative`.
 - [ ] Every pure node has clear input/output contracts and invariants.
 - [ ] Generated node docs are current.
@@ -43,10 +51,13 @@
 
 ## Scanner Status
 
+- Conversion scope:
 - Total named functions:
 - Uncovered function count:
 - Uncovered function preview:
+- DAG nodes missing tests:
 - Documented exclusions:
+- Out-of-scope repo areas not converted:
 
 ## Risks
 

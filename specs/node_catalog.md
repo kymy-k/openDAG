@@ -408,14 +408,16 @@ This catalog is generated from `specs/dag.json`. Update the DAG first, then rege
 
 - **Kind:** `skill`
 - **Status:** `verified`
-- **What it does:** Package reusable Codex instructions, templates, and scanner helpers for aggressively converting an existing repository toward contract-first functional DAG architecture until all repo-owned functions are represented or explicitly blocked.
-- **Input it expects:** `existing repository source tree, conversion goal, and optional user-scoped conversion boundaries`
-- **Output it gives:** `goal-driven conversion workflow, DAG template, AGENTS template, conversion plan template, repo scan helper, and uncovered-function work queue semantics`
-- **Dependencies:** `skill.repoScan.extractNamedFunctions`, `skill.repoScan.functionAppearsCovered`, `skill.repoScan.isSourceFile`, `skill.repoScan.readDagCoverage`, `skill.repoScan.safeRead`, `skill.repoScan.walk`
+- **What it does:** Package reusable Codex instructions, templates, and scanner helpers for aggressively converting an existing repository or explicit user-requested scope toward contract-first functional DAG architecture until all in-scope repo-owned functions are represented or explicitly blocked.
+- **Input it expects:** `existing repository source tree, conversion goal, and optional user-scoped conversion paths such as directories, files, workflows, features, or packages`
+- **Output it gives:** `goal-driven conversion workflow, scoped or full-repo completion criteria, DAG template, AGENTS template, conversion plan template, repo scan helper, and uncovered-function work queue semantics`
+- **Dependencies:** `skill.repoScan.extractNamedFunctions`, `skill.repoScan.functionAppearsCovered`, `skill.repoScan.isSourceFile`, `skill.repoScan.nodeHasSeparateTest`, `skill.repoScan.nodeIsInScanScope`, `skill.repoScan.readDagCoverage`, `skill.repoScan.safeRead`, `skill.repoScan.walk`
 - **Invariants:**
   - Skill artifact is tracked in the DAG as a reusable conversion component.
   - Full conversion mode does not stop while scanner-reported repo-owned functions remain uncovered unless each remaining item has a concrete blocker or exclusion.
-- **Allowed files:** `contracts/contractTypes.ts`, `functional-dag-repo-converter-skill/SKILL.md`, `functional-dag-repo-converter-skill/scripts/repo-scan.mjs`, `functional-dag-repo-converter-skill/templates/AGENTS.md.template`, `functional-dag-repo-converter-skill/templates/conversion-plan.md.template`, `functional-dag-repo-converter-skill/templates/dag.json.template`, `specs/dag.json`
+  - Scoped conversion mode may complete for explicit paths only when the finish report clearly states that out-of-scope repo areas remain unconverted.
+  - Every in-scope DAG node must have a separate tests/ file derived from its spec before conversion is complete.
+- **Allowed files:** `contracts/contractTypes.ts`, `functional-dag-repo-converter-skill/SKILL.md`, `functional-dag-repo-converter-skill/scripts/repo-scan.mjs`, `functional-dag-repo-converter-skill/templates/AGENTS.md.template`, `functional-dag-repo-converter-skill/templates/conversion-plan.md.template`, `functional-dag-repo-converter-skill/templates/dag.json.template`, `functional-dag-repo-converter-skill/templates/tests/node.test.template.md`, `specs/dag.json`, `tests/repo-scan.test.ts`
 
 ## skill.repoScan.extractNamedFunctions
 
@@ -428,7 +430,7 @@ This catalog is generated from `specs/dag.json`. Update the DAG first, then rege
 - **Invariants:**
   - Deterministic parser heuristic with no filesystem access.
   - Duplicate names of the same kind in the same file are reported once.
-- **Allowed files:** `contracts/contractTypes.ts`, `functional-dag-repo-converter-skill/SKILL.md`, `functional-dag-repo-converter-skill/scripts/repo-scan.mjs`, `specs/dag.json`
+- **Allowed files:** `contracts/contractTypes.ts`, `functional-dag-repo-converter-skill/SKILL.md`, `functional-dag-repo-converter-skill/scripts/repo-scan.mjs`, `specs/dag.json`, `tests/repo-scan.test.ts`
 
 ## skill.repoScan.functionAppearsCovered
 
@@ -441,7 +443,7 @@ This catalog is generated from `specs/dag.json`. Update the DAG first, then rege
 - **Invariants:**
   - Deterministic helper with no filesystem access.
   - A function is covered only when its file is allowed by some DAG node and a node id names or contains the function name.
-- **Allowed files:** `contracts/contractTypes.ts`, `functional-dag-repo-converter-skill/SKILL.md`, `functional-dag-repo-converter-skill/scripts/repo-scan.mjs`, `specs/dag.json`
+- **Allowed files:** `contracts/contractTypes.ts`, `functional-dag-repo-converter-skill/SKILL.md`, `functional-dag-repo-converter-skill/scripts/repo-scan.mjs`, `specs/dag.json`, `tests/repo-scan.test.ts`
 
 ## skill.repoScan.isSourceFile
 
@@ -454,20 +456,44 @@ This catalog is generated from `specs/dag.json`. Update the DAG first, then rege
 - **Invariants:**
   - Deterministic helper with no filesystem access.
   - Only extension-based classification is performed.
-- **Allowed files:** `contracts/contractTypes.ts`, `functional-dag-repo-converter-skill/SKILL.md`, `functional-dag-repo-converter-skill/scripts/repo-scan.mjs`, `specs/dag.json`
+- **Allowed files:** `contracts/contractTypes.ts`, `functional-dag-repo-converter-skill/SKILL.md`, `functional-dag-repo-converter-skill/scripts/repo-scan.mjs`, `specs/dag.json`, `tests/repo-scan.test.ts`
+
+## skill.repoScan.nodeHasSeparateTest
+
+- **Kind:** `skill`
+- **Status:** `verified`
+- **What it does:** Check whether one DAG node declares at least one allowed file under the separate tests/ directory.
+- **Input it expects:** `node-like object with optional allowedFiles array`
+- **Output it gives:** `boolean indicating whether the node has a tests/ allowed file`
+- **Dependencies:** None
+- **Invariants:**
+  - Deterministic helper with no filesystem access.
+- **Allowed files:** `contracts/contractTypes.ts`, `functional-dag-repo-converter-skill/SKILL.md`, `functional-dag-repo-converter-skill/scripts/repo-scan.mjs`, `specs/dag.json`, `tests/repo-scan.test.ts`
+
+## skill.repoScan.nodeIsInScanScope
+
+- **Kind:** `skill`
+- **Status:** `verified`
+- **What it does:** Check whether one DAG node is in the currently scanned full-repo or scoped conversion area by intersecting allowed files with scanned files.
+- **Input it expects:** `node-like object and set of scanned repository-relative file paths`
+- **Output it gives:** `boolean indicating whether the node belongs to the current scan scope`
+- **Dependencies:** None
+- **Invariants:**
+  - Deterministic helper with no filesystem access.
+- **Allowed files:** `contracts/contractTypes.ts`, `functional-dag-repo-converter-skill/SKILL.md`, `functional-dag-repo-converter-skill/scripts/repo-scan.mjs`, `specs/dag.json`, `tests/repo-scan.test.ts`
 
 ## skill.repoScan.readDagCoverage
 
 - **Kind:** `skill`
 - **Status:** `verified`
-- **What it does:** Read existing openDAG coverage from specs/dag.json so the converter can identify functions that are not yet represented in the DAG.
+- **What it does:** Read existing openDAG coverage from specs/dag.json so the converter can identify functions and DAG nodes that are not yet fully represented or tested.
 - **Input it expects:** `repository root path captured by the scanner process`
-- **Output it gives:** `{ nodeIds: string[], allowedFiles: string[] } coverage summary`
+- **Output it gives:** `{ nodes: unknown[], nodeIds: string[], allowedFiles: string[] } coverage summary`
 - **Dependencies:** `skill.repoScan.safeRead`
 - **Invariants:**
   - Skill helper is intentionally imperative because it reads specs/dag.json.
   - Invalid or missing DAG files produce empty coverage instead of stopping the scan.
-- **Allowed files:** `contracts/contractTypes.ts`, `functional-dag-repo-converter-skill/SKILL.md`, `functional-dag-repo-converter-skill/scripts/repo-scan.mjs`, `specs/dag.json`
+- **Allowed files:** `contracts/contractTypes.ts`, `functional-dag-repo-converter-skill/SKILL.md`, `functional-dag-repo-converter-skill/scripts/repo-scan.mjs`, `specs/dag.json`, `tests/repo-scan.test.ts`
 
 ## skill.repoScan.safeRead
 
@@ -480,19 +506,19 @@ This catalog is generated from `specs/dag.json`. Update the DAG first, then rege
 - **Invariants:**
   - Skill helper is intentionally imperative because it reads the filesystem.
   - Read failures are local to the scanned file and do not abort the scan.
-- **Allowed files:** `contracts/contractTypes.ts`, `functional-dag-repo-converter-skill/SKILL.md`, `functional-dag-repo-converter-skill/scripts/repo-scan.mjs`, `specs/dag.json`
+- **Allowed files:** `contracts/contractTypes.ts`, `functional-dag-repo-converter-skill/SKILL.md`, `functional-dag-repo-converter-skill/scripts/repo-scan.mjs`, `specs/dag.json`, `tests/repo-scan.test.ts`
 
 ## skill.repoScan.walk
 
 - **Kind:** `skill`
 - **Status:** `verified`
-- **What it does:** Walk a repository directory for the converter skill while ignoring dependency, build, cache, and VCS folders.
-- **Input it expects:** `dir: string and limit: number`
+- **What it does:** Walk a repository directory or inspect a single source file for the converter skill while ignoring dependency, build, cache, virtual environment, vendor, and VCS folders.
+- **Input it expects:** `dir: string path to a directory or file, and limit: number`
 - **Output it gives:** `string[] of discovered repo-relative paths`
 - **Dependencies:** None
 - **Invariants:**
   - Skill helper is intentionally imperative because it scans the filesystem.
-- **Allowed files:** `contracts/contractTypes.ts`, `functional-dag-repo-converter-skill/SKILL.md`, `functional-dag-repo-converter-skill/scripts/repo-scan.mjs`, `specs/dag.json`
+- **Allowed files:** `contracts/contractTypes.ts`, `functional-dag-repo-converter-skill/SKILL.md`, `functional-dag-repo-converter-skill/scripts/repo-scan.mjs`, `specs/dag.json`, `tests/repo-scan.test.ts`
 
 ## template.nodeImplementation.run
 
@@ -517,6 +543,30 @@ This catalog is generated from `specs/dag.json`. Update the DAG first, then rege
 - **Invariants:**
   - Template function describes the reusable contract-first node shape.
 - **Allowed files:** `contracts/contractTypes.ts`, `functional-dag-agent-skill/templates/typescript-zod-node.contract.template.ts`, `functional-dag-agent-skill/templates/typescript-zod-node.implementation.template.ts`, `functional-dag-agent-skill/templates/typescript-zod-node.test.template.ts`, `specs/dag.json`
+
+## test.repoScan.makeRepo
+
+- **Kind:** `imperative`
+- **Status:** `verified`
+- **What it does:** Create a temporary fixture repository with one source function and a configurable DAG for scanner tests.
+- **Input it expects:** `dagAllowedFiles: string[] used as the fixture node allowedFiles`
+- **Output it gives:** `absolute path to the temporary fixture repository`
+- **Dependencies:** None
+- **Invariants:**
+  - Test helper is intentionally imperative because it creates temporary files.
+- **Allowed files:** `contracts/contractTypes.ts`, `specs/dag.json`, `tests/repo-scan.test.ts`
+
+## test.repoScan.scan
+
+- **Kind:** `imperative`
+- **Status:** `verified`
+- **What it does:** Run the converter scanner against a fixture repository and parse its JSON output for assertions.
+- **Input it expects:** `root: string and optional scanner CLI args`
+- **Output it gives:** `parsed scanner JSON result`
+- **Dependencies:** None
+- **Invariants:**
+  - Test helper is intentionally imperative because it spawns a Node subprocess.
+- **Allowed files:** `contracts/contractTypes.ts`, `specs/dag.json`, `tests/repo-scan.test.ts`
 
 ## tools.createNode.readTemplate
 
@@ -742,7 +792,7 @@ This catalog is generated from `specs/dag.json`. Update the DAG first, then rege
 
 - **Kind:** `helper`
 - **Status:** `verified`
-- **What it does:** Check whether one DAG node only lists files that are valid for its kind, keeping pure nodes inside their node folder except specs/contracts references.
+- **What it does:** Check whether one DAG node only lists files that are valid for its kind, keeping pure nodes inside their node folder except specs, contracts, and separate tests references.
 - **Input it expects:** `node: DagNode`
 - **Output it gives:** `array of human-readable allowedFiles errors`
 - **Dependencies:** `validateDag.nodeFolders`, `validateDag.normalizeAllowedFile`

@@ -13,12 +13,13 @@ Codex acts as the master agent unless explicitly assigned one DAG node as a suba
 
 1. Read the DAG/spec files before editing.
 2. Do not implement before a contract and tests exist.
-3. Keep DAG nodes pure and deterministic.
-4. Keep filesystem, network, database, time, randomness, process environment, and hidden global state outside pure nodes.
-5. Master may edit DAG/contracts/architecture when required by the requested feature.
-6. Subagents must not edit public interfaces, DAG entries, shared contracts, package scripts, verification tools, architecture, or other nodes.
-7. Subagents must not edit outside the assigned node's `allowedFiles`.
-8. Do not weaken tests to pass.
-9. If a contract is impossible or underspecified, propose a contract change instead of silently modifying it.
-10. Run node-level and full verification before finishing.
-11. Explain what changed and how it was verified.
+3. Every DAG node must have a separate test file under `tests/`, based on its spec, schemas, invariants, and dependencies.
+4. Keep DAG nodes pure and deterministic.
+5. Keep filesystem, network, database, time, randomness, process environment, and hidden global state outside pure nodes.
+6. Master may edit DAG/contracts/architecture when required by the requested feature.
+7. Subagents must not edit public interfaces, DAG entries, shared contracts, package scripts, verification tools, architecture, or other nodes.
+8. Subagents must not edit outside the assigned node's `allowedFiles`.
+9. Do not weaken tests to pass.
+10. If a contract is impossible or underspecified, propose a contract change instead of silently modifying it.
+11. Run node-level and full verification before finishing.
+12. Explain what changed and how it was verified.

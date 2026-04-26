@@ -1,7 +1,7 @@
 import { DagSchema, type DagNode } from "../../../contracts/contractTypes.js";
 import { InputSchema, OutputSchema, type Input, type Output } from "./contract.js";
 
-const allowedReferencePrefixes = ["specs/", "contracts/"];
+const allowedReferencePrefixes = ["specs/", "contracts/", "tests/"];
 const allowedGlobalPrefixes = [
   "tools/",
   "templates/",
@@ -56,7 +56,7 @@ function validateAllowedFiles(node: DagNode): string[] {
   const mustBeInsideOneNodeFolder = node.kind === "pure";
 
   if (mustBeInsideOneNodeFolder && folders.size === 0) {
-    errors.push(`${node.id}: allowedFiles must include files inside src/nodes/<nodeFolder>/`);
+      errors.push(`${node.id}: allowedFiles must include files inside src/nodes/<nodeFolder>/`);
   }
 
   if (mustBeInsideOneNodeFolder && folders.size > 1) {
@@ -93,7 +93,7 @@ function validateAllowedFiles(node: DagNode): string[] {
 
     if (!allowedReferencePrefixes.some((prefix) => normalized.startsWith(prefix))) {
       errors.push(
-        `${node.id}: allowedFile "${file}" must be inside the node folder or be a specs/contracts reference`
+        `${node.id}: allowedFile "${file}" must be inside the node folder or be a specs/contracts/tests reference`
       );
     }
   }

@@ -25,7 +25,6 @@ export const metadata: NodeMetadata = {
     "Valid output has ok true and no errors.",
     "Invalid output has ok false and at least one human-readable error.",
     "Every dependency must refer to an existing node and the graph must be acyclic.",
-    "Allowed files must remain inside one node folder, except specs/contracts references."
+    "Allowed files must remain inside one node folder, except specs/contracts/tests references."
   ]
 };
-

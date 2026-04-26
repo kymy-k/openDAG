@@ -134,10 +134,15 @@ This repo includes two reusable Codex skills:
 The converter skill includes a scanner goal check:
 
 ```bash
-node functional-dag-repo-converter-skill/scripts/repo-scan.mjs --fail-on-uncovered /path/to/repo
+node functional-dag-repo-converter-skill/scripts/repo-scan.mjs --fail-on-uncovered --fail-on-missing-tests /path/to/repo
 ```
 
 For a full conversion, that command should pass before the agent declares the conversion complete, unless every remaining generated/vendor exclusion is documented.
+For a scoped conversion, pass one or more `--scope` paths and treat completion as limited to those paths:
+
+```bash
+node functional-dag-repo-converter-skill/scripts/repo-scan.mjs --fail-on-uncovered --fail-on-missing-tests /path/to/repo --scope src/payments
+```
 
 To install either skill for Codex discovery:
 

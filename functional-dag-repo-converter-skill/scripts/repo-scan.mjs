@@ -4,8 +4,26 @@ import path from "node:path";
 
 const args = process.argv.slice(2);
 const failOnUncovered = args.includes("--fail-on-uncovered");
-const rootArg = args.find((arg) => !arg.startsWith("--"));
+const failOnMissingTests = args.includes("--fail-on-missing-tests");
+const scopeArgs = [];
+const positionalArgs = [];
+for (let index = 0; index < args.length; index += 1) {
+  const arg = args[index];
+  if (arg === "--scope") {
+    const value = args[index + 1];
+    if (value) {
+      scopeArgs.push(value);
+      index += 1;
+    }
+  } else if (arg.startsWith("--scope=")) {
+    scopeArgs.push(arg.slice("--scope=".length));
+  } else if (!arg.startsWith("--")) {
+    positionalArgs.push(arg);
+  }
+}
+const rootArg = positionalArgs[0];
 const root = path.resolve(rootArg ?? process.cwd());
+const scopeRoots = scopeArgs.length > 0 ? scopeArgs.map((scope) => path.resolve(root, scope)) : [root];
 const ignored = new Set([
   ".git",
   "node_modules",
@@ -70,6 +88,11 @@ function safeRead(file) {
 }
 
 function walk(dir, limit = 600) {
+  const initialStat = statSync(dir);
+  if (initialStat.isFile()) {
+    return [dir];
+  }
+
   const results = [];
   const stack = [dir];
 
@@ -138,18 +161,19 @@ function readDagCoverage() {
   const dagPath = path.join(root, "specs", "dag.json");
   const contents = safeRead(dagPath);
   if (!contents) {
-    return { nodeIds: [], allowedFiles: [] };
+    return { nodes: [], nodeIds: [], allowedFiles: [] };
   }
 
   try {
     const parsed = JSON.parse(contents);
     const nodes = Array.isArray(parsed.nodes) ? parsed.nodes : [];
     return {
+      nodes,
       nodeIds: nodes.map((node) => String(node.id ?? "")),
       allowedFiles: nodes.flatMap((node) => (Array.isArray(node.allowedFiles) ? node.allowedFiles : []))
     };
   } catch {
-    return { nodeIds: [], allowedFiles: [] };
+    return { nodes: [], nodeIds: [], allowedFiles: [] };
   }
 }
 
@@ -159,8 +183,19 @@ function functionAppearsCovered(fn, coverage) {
   return fileCovered && nameCovered;
 }
 
-const files = walk(root);
+function nodeHasSeparateTest(node) {
+  const allowedFiles = Array.isArray(node.allowedFiles) ? node.allowedFiles : [];
+  return allowedFiles.some((file) => String(file).replaceAll("\\", "/").startsWith("tests/"));
+}
+
+function nodeIsInScanScope(node, scannedRelativeFiles) {
+  const allowedFiles = Array.isArray(node.allowedFiles) ? node.allowedFiles : [];
+  return allowedFiles.some((file) => scannedRelativeFiles.has(String(file).replaceAll("\\", "/")));
+}
+
+const files = [...new Set(scopeRoots.flatMap((scopeRoot) => walk(scopeRoot)))];
 const relativeFiles = files.map((file) => path.relative(root, file));
+const scannedRelativeFiles = new Set(relativeFiles.map((file) => file.replaceAll("\\", "/")));
 const foundMarkers = markers.filter((marker) => {
   try {
     return statSync(path.join(root, marker)).isFile();
@@ -191,9 +226,12 @@ for (const file of files) {
 
 const dagCoverage = readDagCoverage();
 const possiblyUncoveredFunctions = functionCandidates.filter((fn) => !functionAppearsCovered(fn, dagCoverage));
+const nodesInScanScope = dagCoverage.nodes.filter((node) => nodeIsInScanScope(node, scannedRelativeFiles));
+const nodesMissingTests = nodesInScanScope.filter((node) => !nodeHasSeparateTest(node));
 
 const result = {
   root,
+  scopes: scopeArgs.length > 0 ? scopeArgs : ["."],
   markers: foundMarkers,
   fileCountSampled: relativeFiles.length,
   topLevel: readdirSync(root).filter((entry) => !ignored.has(entry)).sort(),
@@ -204,11 +242,22 @@ const result = {
   possiblyUncoveredFunctionCount: possiblyUncoveredFunctions.length,
   possiblyUncoveredPreviewCount: Math.min(possiblyUncoveredFunctions.length, 250),
   possiblyUncoveredFunctions: possiblyUncoveredFunctions.slice(0, 250),
+  nodesInScanScopeCount: nodesInScanScope.length,
+  nodesMissingTestsCount: nodesMissingTests.length,
+  nodesMissingTests: nodesMissingTests.slice(0, 250).map((node) => ({
+    id: node.id,
+    kind: node.kind,
+    allowedFiles: Array.isArray(node.allowedFiles) ? node.allowedFiles : []
+  })),
   sideEffectHits: sideEffectHits.slice(0, 80)
 };
 
 console.log(JSON.stringify(result, null, 2));
 
 if (failOnUncovered && possiblyUncoveredFunctions.length > 0) {
+  process.exitCode = 1;
+}
+
+if (failOnMissingTests && nodesMissingTests.length > 0) {
   process.exitCode = 1;
 }

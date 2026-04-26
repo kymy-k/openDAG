@@ -39,7 +39,7 @@
     {
       "id": "validateDag.validateAllowedFiles",
       "kind": "helper",
-      "purpose": "Check whether one DAG node only lists files that are valid for its kind, keeping pure nodes inside their node folder except specs/contracts references.",
+      "purpose": "Check whether one DAG node only lists files that are valid for its kind, keeping pure nodes inside their node folder except specs, contracts, and separate tests references.",
       "inputSchema": "node: DagNode",
       "outputSchema": "array of human-readable allowedFiles errors",
       "dependencies": [
@@ -1033,8 +1033,8 @@
     {
       "id": "skill.repoScan.walk",
       "kind": "skill",
-      "purpose": "Walk a repository directory for the converter skill while ignoring dependency, build, cache, and VCS folders.",
-      "inputSchema": "dir: string and limit: number",
+      "purpose": "Walk a repository directory or inspect a single source file for the converter skill while ignoring dependency, build, cache, virtual environment, vendor, and VCS folders.",
+      "inputSchema": "dir: string path to a directory or file, and limit: number",
       "outputSchema": "string[] of discovered repo-relative paths",
       "dependencies": [],
       "invariants": [
@@ -1042,6 +1042,7 @@
       ],
       "allowedFiles": [
         "functional-dag-repo-converter-skill/scripts/repo-scan.mjs",
+        "tests/repo-scan.test.ts",
         "functional-dag-repo-converter-skill/SKILL.md",
         "specs/dag.json",
         "contracts/contractTypes.ts"
@@ -1061,6 +1062,7 @@
       ],
       "allowedFiles": [
         "functional-dag-repo-converter-skill/scripts/repo-scan.mjs",
+        "tests/repo-scan.test.ts",
         "functional-dag-repo-converter-skill/SKILL.md",
         "specs/dag.json",
         "contracts/contractTypes.ts"
@@ -1080,6 +1082,7 @@
       ],
       "allowedFiles": [
         "functional-dag-repo-converter-skill/scripts/repo-scan.mjs",
+        "tests/repo-scan.test.ts",
         "functional-dag-repo-converter-skill/SKILL.md",
         "specs/dag.json",
         "contracts/contractTypes.ts"
@@ -1101,6 +1104,7 @@
       ],
       "allowedFiles": [
         "functional-dag-repo-converter-skill/scripts/repo-scan.mjs",
+        "tests/repo-scan.test.ts",
         "functional-dag-repo-converter-skill/SKILL.md",
         "specs/dag.json",
         "contracts/contractTypes.ts"
@@ -1110,9 +1114,9 @@
     {
       "id": "skill.repoScan.readDagCoverage",
       "kind": "skill",
-      "purpose": "Read existing openDAG coverage from specs/dag.json so the converter can identify functions that are not yet represented in the DAG.",
+      "purpose": "Read existing openDAG coverage from specs/dag.json so the converter can identify functions and DAG nodes that are not yet fully represented or tested.",
       "inputSchema": "repository root path captured by the scanner process",
-      "outputSchema": "{ nodeIds: string[], allowedFiles: string[] } coverage summary",
+      "outputSchema": "{ nodes: unknown[], nodeIds: string[], allowedFiles: string[] } coverage summary",
       "dependencies": [
         "skill.repoScan.safeRead"
       ],
@@ -1122,6 +1126,45 @@
       ],
       "allowedFiles": [
         "functional-dag-repo-converter-skill/scripts/repo-scan.mjs",
+        "tests/repo-scan.test.ts",
+        "functional-dag-repo-converter-skill/SKILL.md",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "skill.repoScan.nodeHasSeparateTest",
+      "kind": "skill",
+      "purpose": "Check whether one DAG node declares at least one allowed file under the separate tests/ directory.",
+      "inputSchema": "node-like object with optional allowedFiles array",
+      "outputSchema": "boolean indicating whether the node has a tests/ allowed file",
+      "dependencies": [],
+      "invariants": [
+        "Deterministic helper with no filesystem access."
+      ],
+      "allowedFiles": [
+        "functional-dag-repo-converter-skill/scripts/repo-scan.mjs",
+        "tests/repo-scan.test.ts",
+        "functional-dag-repo-converter-skill/SKILL.md",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "skill.repoScan.nodeIsInScanScope",
+      "kind": "skill",
+      "purpose": "Check whether one DAG node is in the currently scanned full-repo or scoped conversion area by intersecting allowed files with scanned files.",
+      "inputSchema": "node-like object and set of scanned repository-relative file paths",
+      "outputSchema": "boolean indicating whether the node belongs to the current scan scope",
+      "dependencies": [],
+      "invariants": [
+        "Deterministic helper with no filesystem access."
+      ],
+      "allowedFiles": [
+        "functional-dag-repo-converter-skill/scripts/repo-scan.mjs",
+        "tests/repo-scan.test.ts",
         "functional-dag-repo-converter-skill/SKILL.md",
         "specs/dag.json",
         "contracts/contractTypes.ts"
@@ -1143,6 +1186,7 @@
       ],
       "allowedFiles": [
         "functional-dag-repo-converter-skill/scripts/repo-scan.mjs",
+        "tests/repo-scan.test.ts",
         "functional-dag-repo-converter-skill/SKILL.md",
         "specs/dag.json",
         "contracts/contractTypes.ts"
@@ -1218,27 +1262,67 @@
     {
       "id": "skill.functionalDagRepoConverterSkill",
       "kind": "skill",
-      "purpose": "Package reusable Codex instructions, templates, and scanner helpers for aggressively converting an existing repository toward contract-first functional DAG architecture until all repo-owned functions are represented or explicitly blocked.",
-      "inputSchema": "existing repository source tree, conversion goal, and optional user-scoped conversion boundaries",
-      "outputSchema": "goal-driven conversion workflow, DAG template, AGENTS template, conversion plan template, repo scan helper, and uncovered-function work queue semantics",
+      "purpose": "Package reusable Codex instructions, templates, and scanner helpers for aggressively converting an existing repository or explicit user-requested scope toward contract-first functional DAG architecture until all in-scope repo-owned functions are represented or explicitly blocked.",
+      "inputSchema": "existing repository source tree, conversion goal, and optional user-scoped conversion paths such as directories, files, workflows, features, or packages",
+      "outputSchema": "goal-driven conversion workflow, scoped or full-repo completion criteria, DAG template, AGENTS template, conversion plan template, repo scan helper, and uncovered-function work queue semantics",
       "dependencies": [
         "skill.repoScan.walk",
         "skill.repoScan.isSourceFile",
         "skill.repoScan.safeRead",
         "skill.repoScan.extractNamedFunctions",
         "skill.repoScan.readDagCoverage",
-        "skill.repoScan.functionAppearsCovered"
+        "skill.repoScan.functionAppearsCovered",
+        "skill.repoScan.nodeHasSeparateTest",
+        "skill.repoScan.nodeIsInScanScope"
       ],
       "invariants": [
         "Skill artifact is tracked in the DAG as a reusable conversion component.",
-        "Full conversion mode does not stop while scanner-reported repo-owned functions remain uncovered unless each remaining item has a concrete blocker or exclusion."
+        "Full conversion mode does not stop while scanner-reported repo-owned functions remain uncovered unless each remaining item has a concrete blocker or exclusion.",
+        "Scoped conversion mode may complete for explicit paths only when the finish report clearly states that out-of-scope repo areas remain unconverted.",
+        "Every in-scope DAG node must have a separate tests/ file derived from its spec before conversion is complete."
       ],
       "allowedFiles": [
         "functional-dag-repo-converter-skill/SKILL.md",
         "functional-dag-repo-converter-skill/scripts/repo-scan.mjs",
+        "tests/repo-scan.test.ts",
         "functional-dag-repo-converter-skill/templates/AGENTS.md.template",
         "functional-dag-repo-converter-skill/templates/dag.json.template",
         "functional-dag-repo-converter-skill/templates/conversion-plan.md.template",
+        "functional-dag-repo-converter-skill/templates/tests/node.test.template.md",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "test.repoScan.makeRepo",
+      "kind": "imperative",
+      "purpose": "Create a temporary fixture repository with one source function and a configurable DAG for scanner tests.",
+      "inputSchema": "dagAllowedFiles: string[] used as the fixture node allowedFiles",
+      "outputSchema": "absolute path to the temporary fixture repository",
+      "dependencies": [],
+      "invariants": [
+        "Test helper is intentionally imperative because it creates temporary files."
+      ],
+      "allowedFiles": [
+        "tests/repo-scan.test.ts",
+        "specs/dag.json",
+        "contracts/contractTypes.ts"
+      ],
+      "status": "verified"
+    },
+    {
+      "id": "test.repoScan.scan",
+      "kind": "imperative",
+      "purpose": "Run the converter scanner against a fixture repository and parse its JSON output for assertions.",
+      "inputSchema": "root: string and optional scanner CLI args",
+      "outputSchema": "parsed scanner JSON result",
+      "dependencies": [],
+      "invariants": [
+        "Test helper is intentionally imperative because it spawns a Node subprocess."
+      ],
+      "allowedFiles": [
+        "tests/repo-scan.test.ts",
         "specs/dag.json",
         "contracts/contractTypes.ts"
       ],
